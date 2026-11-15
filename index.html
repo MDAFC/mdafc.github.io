@@ -1175,6 +1175,14 @@ $('#composer').onsubmit=e=>{e.preventDefault();const v=$('#msgInput').value.trim
 
 /* ================= Annuaire (étudiants + anciens) ================= */
 let ANC=null,ancLoading=false;
+const normName=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]+/g,' ').trim();
+// Profils sans doublons : un même nom n'apparaît qu'une fois (le plus récent), et les membres du BDE restent dans leur propre liste
+function uniqueProfiles(){
+  const bde=new Set(BDE_MEMBERS.map(m=>normName(m.name))),best=new Map();
+  for(const [id,p] of Object.entries(S.profiles||{})){const k=normName(p.name);if(!k||bde.has(k))continue;
+    const cur=best.get(k);if(!cur||(p.at||0)>(cur.at||0))best.set(k,{...p,id});}
+  return [...best.values()];
+}
 function vAnnuaire(){
   const seg=ui.seg||'etudiants';
   let html=`<div class="seg"><button data-seg="etudiants" class="${seg==='etudiants'?'on':''}">Étudiants</button><button data-seg="anciens" class="${seg==='anciens'?'on':''}">Réseau des anciens</button></div>`;
@@ -1182,9 +1190,9 @@ function vAnnuaire(){
     html+=`<div class="section-title">Bureau du BDE 2026-2027</div>
       ${!isBDE()?`<button class="btn block small" id="annBde" style="margin-bottom:10px">✉️ Écrire au BDE (les 7 membres)</button>`:''}
       <div class="list">${BDE_MEMBERS.map(m=>`<button class="card row" data-dm="${m.id}">${avatar(m)}<div class="meta"><b>${esc(m.name)}</b><span>${esc(m.role)}</span></div><span class="tag gold">BDE</span>${isMine(m.id)?'':'<span class="sub" style="font-size:18px">✉️</span>'}</button>`).join('')}</div>
-      ${(()=>{const others=Object.entries(S.profiles).filter(([id])=>id!==S.uid).map(([id,p])=>({...p,id}));const sf=ui.pf||'Tous';
-        const list=[{...S.me,me:true},...others].filter(p=>sf==='Tous'||p.promo===sf).sort((a,b)=>(b.me?1:0)-(a.me?1:0)||a.name.localeCompare(b.name,'fr'));
-        return `<div class="section-title">Étudiants inscrits (${others.length+1})</div>
+      ${(()=>{const others=uniqueProfiles().filter(p=>p.id!==S.uid&&normName(p.name)!==normName(S.me.name));const sf=ui.pf||'Tous';
+        const list=[...(isBDE()?[]:[{...S.me,me:true}]),...others].filter(p=>sf==='Tous'||p.promo===sf).sort((a,b)=>(b.me?1:0)-(a.me?1:0)||a.name.localeCompare(b.name,'fr'));
+        return `<div class="section-title">Étudiants inscrits (${others.length+(isBDE()?0:1)})</div>
         <div class="chips">${['Tous',...PROMOS].map(t=>`<button class="chip ${t===sf?'on':''}" data-pf="${t}">${t}</button>`).join('')}</div>
         <div class="list">${list.map(p=>p.me?`<div class="card row">${avatar(p)}<div class="meta"><b>${esc(p.name)} (vous)</b><span>${esc(p.promo||'')}</span></div></div>`:`<button class="card row" data-dm="${p.id}">${avatar(p)}<div class="meta"><b>${esc(p.name)}</b><span>${esc(p.promo||'')}</span></div><span class="sub" style="font-size:18px">✉️</span></button>`).join('')}</div>
         ${Backend.mode==='local'?'<div class="note" style="margin-top:12px">Mode démo : les autres étudiants apparaîtront ici une fois la base partagée en place.</div>':''}`;})()}`;

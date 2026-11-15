@@ -56,8 +56,8 @@ async function loadAll(){
   const {data,error}=await client.from('items').select('col,id,data').order('created_at',{ascending:true});
   if(error)throw error;
   rows=new Map(data.map(r=>[key(r.col,r.id),r]));
-  const p=await client.from('profiles').select('id,name,promo');
-  profiles={};(p.data||[]).forEach(x=>profiles[x.id]={name:x.name,promo:x.promo});
+  const p=await client.from('profiles').select('id,name,promo,updated_at');
+  profiles={};(p.data||[]).forEach(x=>profiles[x.id]={name:x.name,promo:x.promo,at:Date.parse(x.updated_at)||0});
   empty=!rows.has(key('setting','subjects'));
   if(empty){
     // Base encore vide : on affiche le contenu de départ. Le premier membre du BDE connecté l'enverra.
@@ -68,7 +68,7 @@ async function loadAll(){
 let pending=false;
 function remote(payload){
   const t=payload.table,ev=payload.eventType;
-  if(t==='profiles'){const r=ev==='DELETE'?payload.old:payload.new;if(ev==='DELETE')delete profiles[r.id];else profiles[r.id]={name:r.name,promo:r.promo};S.profiles=profiles;onChange();return;}
+  if(t==='profiles'){const r=ev==='DELETE'?payload.old:payload.new;if(ev==='DELETE')delete profiles[r.id];else profiles[r.id]={name:r.name,promo:r.promo,at:Date.parse(r.updated_at)||Date.now()};S.profiles=profiles;onChange();return;}
   if(ev==='DELETE'){rows.delete(key(payload.old.col,payload.old.id));}
   else{const r=payload.new;rows.set(key(r.col,r.id),{col:r.col,id:r.id,data:r.data});}
   if(empty&&rows.has(key('setting','subjects')))empty=false;
