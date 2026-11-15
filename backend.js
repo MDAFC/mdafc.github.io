@@ -174,7 +174,7 @@ window.Backend={
     if(!m){await client.auth.signOut();const a=await client.auth.signInAnonymously();uid=a.data.session.user.id;await loadAll();throw new Error('Ce compte n\'est pas membre du BDE');}
     uid=r.data.session.user.id;member=m;joined=true;
     // retire l'ancien profil anonyme de cet appareil pour éviter un doublon dans l'annuaire (le BDE peut supprimer un profil)
-    if(anonId&&anonId!==uid)await client.from('profiles').delete().eq('id',anonId);
+    if(anonId&&anonId!==uid){await client.from('profiles').delete().eq('id',anonId);await client.from('students').delete().eq('id',anonId);}
     await loadAll();
     if(empty){synced=new Map();await pushNow();}     // initialise la base avec le contenu de départ
     subscribe();status='online';onChange();return m;

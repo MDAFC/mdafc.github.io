@@ -1298,25 +1298,40 @@ async function drawCodes(){
   try{
     const [codes,studs]=await Promise.all([Backend.getCodes(),Backend.listStudents()]);
     if(!$('#codesCard'))return;
-    const n=p=>studs.filter(x=>x.promo===p).length;
+    // Une inscription = un appareil. On regroupe par personne (même nom), on met à part les membres du BDE
+    // et les anciens appareils dont le profil a disparu (souvent l'appareil d'un membre avant sa connexion BDE).
+    const bdeNames=new Set(BDE_MEMBERS.map(m=>normName(m.name)));
+    const groups=new Map(),orphans=[],bdeRows=new Map();
+    for(const x of studs){const pr=S.profiles[x.id];
+      if(!pr){orphans.push(x);continue;}
+      const k=normName(pr.name);
+      if(bdeNames.has(k)){bdeRows.set(k,(bdeRows.get(k)||[]).concat(x));continue;}
+      const g=groups.get(k)||{name:pr.name,rows:[]};g.rows.push(x);groups.set(k,g);}
+    const people=[...groups.values()].map(g=>({...g,promo:g.rows.slice().sort((a,b)=>b.joined_at.localeCompare(a.joined_at))[0].promo,
+      first:g.rows.map(r=>r.joined_at).sort()[0],ids:g.rows.map(r=>r.id)})).sort((a,b)=>a.promo.localeCompare(b.promo)||a.name.localeCompare(b.name,'fr'));
+    const n=p=>people.filter(x=>x.promo===p).length;
     box.innerHTML=`<p class="sub" style="line-height:1.5;margin-bottom:10px">Chaque étudiant entre une fois avec le code de sa promo. Changez un code s'il a circulé hors du Magistère : les inscrits gardent leur accès.</p>
-      ${codes.map(c=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);gap:6px"><div class="meta"><b>${esc(c.promo)}</b><span style="font-family:ui-monospace,monospace;letter-spacing:.05em;font-weight:700;color:var(--text)">${esc(c.code)}</span><span>${n(c.promo)} inscrit${n(c.promo)>1?'s':''}</span></div>
+      ${codes.map(c=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);gap:6px"><div class="meta"><b>${esc(c.promo)}</b><span style="font-family:ui-monospace,monospace;letter-spacing:.05em;font-weight:700;color:var(--text)">${esc(c.code)}</span><span>${n(c.promo)} étudiant${n(c.promo)>1?'s':''}</span></div>
         <button class="btn ghost small" data-copy="${esc(c.code)}">Copier</button><button class="btn ghost small" data-code="${esc(c.promo)}">Changer</button></div>`).join('')}
-      <button class="btn ghost block small" id="studList" style="margin-top:10px">Voir les inscrits (${studs.length})</button>`;
+      <button class="btn ghost block small" id="studList" style="margin-top:10px">Voir les inscrits (${people.length})</button>`;
     $$('[data-copy]').forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(b.dataset.copy).then(()=>toast('Code copié'),()=>toast(b.dataset.copy));});
     $$('[data-code]').forEach(b=>b.onclick=async()=>{const p=b.dataset.code;
       const sug=p.replace(' ','').toUpperCase()+'-'+Array.from(crypto.getRandomValues(new Uint8Array(5)),x=>'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[x%31]).join('');
       const c=await askText('Nouveau code pour '+p+' (6 caractères minimum) :',sug);if(!c)return;
       try{await Backend.setCode(p,c);toast('Code '+p+' modifié');drawCodes();}catch(e){toast(e.message);}});
+    const removeAll=async ids=>{for(const id of ids)await Backend.removeStudent(id);};
     $('#studList').onclick=()=>{
-      const name=id=>S.profiles[id]?.name||'(profil non renseigné)';
-      const list=studs.slice().sort((a,b)=>a.promo.localeCompare(b.promo)||name(a.id).localeCompare(name(b.id),'fr'));
-      openSheet(`<h3>Étudiants inscrits (${studs.length})</h3><p class="sub" style="margin-bottom:10px">Retirer quelqu'un lui coupe l'accès. Pensez à changer le code de sa promo pour qu'il ne puisse pas revenir.</p>
-        <div class="list">${list.map(x=>`<div class="card row"><div class="meta"><b>${esc(name(x.id))}</b><span>${esc(x.promo)} · inscrit le ${new Date(x.joined_at).toLocaleDateString('fr-FR')}</span></div><button class="btn ghost small" data-mv="${x.id}">Promo</button><button class="btn ghost small" data-kick="${x.id}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>`);
-      $$('[data-mv]').forEach(b=>b.onclick=async()=>{const p=await choose('Nouvelle promo pour '+name(b.dataset.mv)+' :',PROMOS);if(!p)return;
-        try{await Backend.setStudentPromo(b.dataset.mv,p);toast(name(b.dataset.mv)+' est maintenant en '+p);closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
-      $$('[data-kick]').forEach(b=>b.onclick=async()=>{if(!await ask('Retirer '+name(b.dataset.kick)+" de l'application ?"))return;
-        try{await Backend.removeStudent(b.dataset.kick);toast('Accès retiré');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
+      const dev=k=>k>1?` · ${k} appareils`:'';
+      openSheet(`<h3>Étudiants inscrits (${people.length})</h3><p class="sub" style="margin-bottom:10px">Une même personne entrée depuis plusieurs appareils (Safari, icône de l'écran d'accueil, ordinateur) n'apparaît qu'une fois. Retirer lui coupe l'accès sur tous ses appareils : pensez ensuite à changer le code de sa promo.</p>
+        <div class="list">${people.map((x,i)=>`<div class="card row"><div class="meta"><b>${esc(x.name)}</b><span>${esc(x.promo)} · depuis le ${new Date(x.first).toLocaleDateString('fr-FR')}${dev(x.ids.length)}</span></div><button class="btn ghost small" data-mv="${i}">Promo</button><button class="btn ghost small" data-kick="${i}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>
+        ${bdeRows.size?`<div class="section-title">Membres du BDE</div><p class="sub" style="line-height:1.5">${[...bdeRows.keys()].map(k=>esc(BDE_MEMBERS.find(m=>normName(m.name)===k).name)).join(', ')} : entrés aussi avec un code de promo. Rien à faire, ils restent dans la liste du bureau.</p>`:''}
+        ${orphans.length?`<div class="section-title">Anciens appareils sans profil</div><div class="card row"><div class="meta"><b>${orphans.length} ancienne${orphans.length>1?'s':''} session${orphans.length>1?'s':''}</b><span>Appareils dont le profil a été remplacé (par exemple avant une connexion BDE)</span></div><button class="btn ghost small" id="cleanOrph">Nettoyer</button></div>`:''}`);
+      $$('[data-mv]').forEach(b=>b.onclick=async()=>{const x=people[+b.dataset.mv];const p=await choose('Nouvelle promo pour '+x.name+' :',PROMOS);if(!p)return;
+        try{for(const id of x.ids)await Backend.setStudentPromo(id,p);toast(x.name+' est maintenant en '+p);closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
+      $$('[data-kick]').forEach(b=>b.onclick=async()=>{const x=people[+b.dataset.kick];if(!await ask('Retirer '+x.name+" de l'application"+(x.ids.length>1?' (sur ses '+x.ids.length+' appareils)':'')+' ?','Retirer'))return;
+        try{await removeAll(x.ids);toast('Accès retiré');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
+      if($('#cleanOrph'))$('#cleanOrph').onclick=async()=>{if(!await ask('Supprimer ces '+orphans.length+' anciennes sessions sans profil ?','Nettoyer'))return;
+        try{await removeAll(orphans.map(o=>o.id));toast('Sessions nettoyées');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}};
     };
   }catch(e){box.innerHTML=`<p class="sub">Codes indisponibles : ${esc(e.message||String(e))}</p>`;}
 }
