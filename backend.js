@@ -9,7 +9,8 @@
 const CFG=window.MDAFC_CONFIG||{};
 const MODE=!CFG.url?'local':CFG.url.startsWith('mock')?'mock':'supabase';
 const BDE_COLS=new Set(['todo','bde_setting']);
-const scopeOf=(col,d)=>BDE_COLS.has(col)||(col==='msg'&&d.channel==='cb')?'bde':'public';
+const PROMO_CH={c2:'Mag 1',c3:'Mag 2',c4:'Mag 3'};
+const scopeOf=(col,d)=>col==='dm'?'dm':BDE_COLS.has(col)||(col==='msg'&&d.channel==='cb')?'bde':(col==='msg'&&PROMO_CH[d.channel])||'public';
 const key=(c,i)=>c+'/'+i;
 const snap=m=>new Map([...m].map(([k,r])=>[k,JSON.stringify(r.data)]));
 
@@ -30,6 +31,7 @@ function flatten(S){
   [['offers','offer'],['products','product'],['albums','album'],['files','file'],['todos','todo']].forEach(([k,c])=>S[k].forEach(x=>put(c,x.id,x)));
   S.pairs.forEach(p=>put('pair',p.parrain+'→'+p.filleul,p));
   S.channels.forEach(c=>c.msgs.forEach(x=>{if(x.id)put('msg',x.id,{...x,channel:c.id});}));
+  (S.dms||[]).forEach(x=>put('dm',x.id,x));
   put('setting','subjects',{v:S.subjects});put('setting','semester',{v:S.semester});put('bde_setting','drive',{v:S.bdeDrive});
   return m;
 }
@@ -41,6 +43,7 @@ function unflatten(){
   S.polls=by('poll').map(p=>({...p,options:p.options.map((o,i)=>({text:o.text,votes:votes.filter(v=>v.poll===p.id&&v.opt===i).map(v=>v.user)}))}));
   S.boards=by('board').map(b=>({...b,questions:qs.filter(q=>q.board===b.id).map(({board,...q})=>({...q,likes:likes.filter(l=>l.q===q.id).map(l=>l.user)}))}));
   S.offers=by('offer');S.products=by('product');S.albums=by('album');S.files=by('file');S.todos=by('todo');S.pairs=by('pair');
+  S.dms=by('dm').sort((a,b)=>a.t-b.t);
   S.channels=SEED.channels.map(c=>({...c,msgs:[...c.msgs,...msgs.filter(x=>x.channel===c.id).map(({channel,...x})=>x)].sort((a,b)=>a.t-b.t)}));
   const st=k=>rows.get(key('setting',k))?.data?.v;
   S.subjects=st('subjects')||SEED.subjects;S.semester=st('semester')||SEED.semester;
@@ -58,7 +61,7 @@ async function loadAll(){
   empty=!rows.has(key('setting','subjects'));
   if(empty){
     // Base encore vide : on affiche le contenu de départ. Le premier membre du BDE connecté l'enverra.
-    const seedS=structuredClone(SEED);Object.assign(S,{events:seedS.events,reminders:seedS.reminders,polls:seedS.polls,boards:seedS.boards,offers:[],products:seedS.products,albums:seedS.albums,files:[],todos:seedS.todos,pairs:[],channels:seedS.channels,subjects:seedS.subjects,semester:seedS.semester,bdeDrive:seedS.bdeDrive,profiles});
+    const seedS=structuredClone(SEED);Object.assign(S,{events:seedS.events,reminders:seedS.reminders,polls:seedS.polls,boards:seedS.boards,offers:[],products:seedS.products,albums:seedS.albums,files:[],todos:seedS.todos,pairs:[],channels:seedS.channels,dms:[],subjects:seedS.subjects,semester:seedS.semester,bdeDrive:seedS.bdeDrive,profiles});
     synced=member?new Map():snap(flatten(S));
   } else { unflatten(); synced=snap(flatten(S)); }
 }
@@ -139,14 +142,19 @@ window.Backend={
   },
   // Réseau des anciens (stocké dans la base, lisible seulement par les inscrits)
   async loadAnciens(){
-    if(MODE==='supabase'){const {data,error}=await client.from('alumni').select('p,n,c,j,v,y,m,t').order('id');if(error)throw error;return data;}
+    if(MODE==='supabase'){const {data,error}=await client.from('alumni').select('id,p,n,c,j,v,y,m,t,l').order('id');if(error)throw error;return data;}
     if(!window.ANCIENS)await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='anciens.js';sc.onload=ok;sc.onerror=()=>ok();document.head.appendChild(sc);});
-    return window.ANCIENS||[];
+    return (window.ANCIENS||[]).map((x,i)=>({id:i,...x}));
+  },
+  async updateAncien(id,ch){
+    if(MODE==='supabase'){const {error}=await client.from('alumni').update(ch).eq('id',id);if(error)throw error;return;}
+    if(window.ANCIENS&&window.ANCIENS[id])Object.assign(window.ANCIENS[id],ch);
   },
   // Gestion des accès (BDE)
   async getCodes(){const {data,error}=await client.rpc('get_promo_codes');if(error)throw error;return data;},
   async setCode(promo,code){const {error}=await client.rpc('set_promo_code',{p_promo:promo,p_code:code});if(error)throw new Error(error.message);},
   async listStudents(){const {data,error}=await client.from('students').select('id,promo,joined_at').order('joined_at',{ascending:false});if(error)throw error;return data;},
+  async setStudentPromo(id,promo){const {error}=await client.rpc('set_student_promo',{p_id:id,p_promo:promo});if(error)throw new Error(error.message);if(profiles[id])profiles[id].promo=promo;onChange();},
   async removeStudent(id){let r=await client.from('students').delete().eq('id',id);if(r.error)throw r.error;r=await client.from('profiles').delete().eq('id',id);delete profiles[id];onChange();},
   schedulePush(){if(MODE==='local')return;clearTimeout(timer);timer=setTimeout(()=>{timer=null;pushing=pushing.then(pushNow).then(()=>{if(pending){pending=false;unflatten();synced=snap(flatten(S));onChange();}}).catch(e=>onError(e));},250);},
   async flush(){clearTimeout(timer);timer=null;await (pushing=pushing.then(pushNow));},
@@ -206,7 +214,7 @@ function MockSupabase(){
         for(const r of [].concat(arr)){
           if(table==='profiles'){d.profiles[r.id]=r;emit('profiles','UPDATE',r);continue;}
           const k=r.col+'/'+r.id,old=d.items[k];
-          const ok=isBde()||(r.scope==='public'&&studentCol(r.col,r.data)&&(!old||old.owner===me));
+          const ok=isBde()||((r.scope==='public'&&studentCol(r.col,r.data))||r.scope==='dm'||['Mag 1','Mag 2','Mag 3'].includes(r.scope))&&(!old||old.owner===me);
           if(!ok){return res(null,{message:'new row violates row-level security policy'});}
           d.items[k]={...r,owner:old?.owner||me,created_at:old?.created_at||Date.now()};
         }
@@ -220,7 +228,9 @@ function MockSupabase(){
           if(old&&!(isBde()||old.owner===ses().user.id))return res(null,{message:'not allowed'}).then(ok,ko);
           delete d.items[k];setdb(d);emit('items','DELETE',null,{col:c,id:i});return res(null).then(ok,ko);}
         if(table==='profiles')return res(Object.values(d.profiles)).then(ok,ko);
-        const items=Object.values(d.items).filter(r=>r.scope==='public'||isBde()).sort((a,b)=>a.created_at-b.created_at);
+        const me=ses()?.user?.id,myBde=BDE[ses()?.user?.email],st=(d.students||{})[me];
+        const can=r=>r.scope==='dm'?(r.owner===me||r.data.to===me||r.data.to===myBde||(String(r.data.thread).startsWith('bde:')&&isBde())):r.scope==='public'||isBde()||(st&&r.scope===st.promo);
+        const items=Object.values(d.items).filter(can).sort((a,b)=>a.created_at-b.created_at);
         return res(items).then(ok,ko);}
     };return f;
   }
@@ -244,6 +254,7 @@ function MockSupabase(){
       if(name==='join_promo'){const p={'MAG1-TEST':'Mag 1','MAG2-TEST':'Mag 2','MAG3-TEST':'Mag 3'}[(args.p_code||'').toUpperCase()];if(!p)return res(null,{message:'Code invalide'});d.students[me]={id:me,promo:p,joined_at:new Date().toISOString()};setdb(d);return res(p);}
       if(name==='get_promo_codes')return res([{promo:'Mag 1',code:'MAG1-TEST'},{promo:'Mag 2',code:'MAG2-TEST'},{promo:'Mag 3',code:'MAG3-TEST'}]);
       if(name==='set_promo_code')return res(null);
+      if(name==='set_student_promo'){if(d.students[args.p_id])d.students[args.p_id].promo=args.p_promo;if(d.profiles[args.p_id])d.profiles[args.p_id].promo=args.p_promo;setdb(d);return res(null);}
       return res(null);},
     from,
     channel(){const ch={on(_,filter,cb){listeners.push({table:filter.table,cb});return ch;},subscribe(){return ch;}};return ch;},

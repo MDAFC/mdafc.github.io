@@ -262,6 +262,30 @@ nav.tabs .dot{position:absolute;top:2px;right:calc(50% - 20px);min-width:17px;he
 .fab svg{width:22px;height:22px}
 .toast{position:absolute;left:50%;top:80px;transform:translate(-50%,-20px);background:var(--red);color:var(--cream);padding:10px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.3s;z-index:80;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+.dlg{position:absolute;inset:0;z-index:90;background:rgba(40,10,16,.5);display:flex;align-items:center;justify-content:center;padding:24px}
+.dlg[hidden]{display:none}
+.dlg .box{background:var(--card);border-radius:18px;padding:20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 50px rgba(40,10,16,.3)}
+.dlg .box p{line-height:1.5;font-size:14.5px}
+.dlg .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+/* ---------- Ordinateur : affichage paysage ---------- */
+@media (min-width:900px){
+  body{background:#E9DCCD}
+  .app{max-width:1280px;display:grid;grid-template-columns:240px 1fr;grid-template-rows:auto 1fr;grid-template-areas:"head head" "nav main"}
+  #header{grid-area:head;padding:14px 28px}
+  main{grid-area:main;padding:28px 40px 48px}
+  main>*{max-width:1080px}
+  nav.tabs{grid-area:nav;flex-direction:column;justify-content:flex-start;gap:4px;border-top:0;border-right:1px solid var(--line);padding:18px 12px}
+  nav.tabs button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;font-size:14.5px;padding:12px 14px}
+  nav.tabs button.active{background:var(--gold-soft)}
+  nav.tabs .dot{position:static;margin-left:auto}
+  .tiles{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  main .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+  .fab{right:40px;bottom:32px}
+  .chat{left:auto;width:min(560px,48%);box-shadow:-20px 0 50px rgba(40,10,16,.18)}
+  .sheet{left:50%;right:auto;width:600px;max-width:92%;margin-left:-300px;bottom:24px;border-radius:22px;max-height:88vh}
+  .toast{top:90px}
+}
+
 </style>
 </head>
 <body>
@@ -292,6 +316,7 @@ nav.tabs .dot{position:absolute;top:2px;right:calc(50% - 20px);min-width:17px;he
   <div class="overlay" id="overlay"></div>
   <div class="sheet" id="sheet"></div>
   <div class="lightbox" id="lightbox" hidden></div>
+  <div class="dlg" id="dlg" hidden></div>
   <div class="toast" id="toast"></div>
 </div>
 
@@ -383,6 +408,7 @@ function placeholderPhoto(title,sub,hue){
 const SEED={
   me:null, bdeHash:DEFAULT_BDE_HASH, semester:'S1',
   subjects:{'Mag 1':{S1:SUBJECTS_S1['Mag 1'],S2:[]},'Mag 2':{S1:SUBJECTS_S1['Mag 2'],S2:[]},'Mag 3':{S1:SUBJECTS_S1['Mag 3'],S2:[]}},
+  dms:[],
   channels:[
     {id:'c1',name:'Général',emoji:'🏛️',color:'#5A1220',desc:'Mag 1 · Mag 2 · Mag 3',msgs:[{from:'sys',text:'Bienvenue sur MDAFC ! Toutes les infos du Magistère passent désormais ici 🎉',t:T0-2*H}]},
     {id:'c2',name:'Mag 1',emoji:'1️⃣',color:'#7B1E2E',desc:'Promo Mag 1',promo:'Mag 1',msgs:[]},
@@ -434,6 +460,7 @@ const SEED={
 const KEY='mdafc-v4'+(Backend.mode==='mock'?'-'+(sessionStorage.getItem('mdafc-tab')||(sessionStorage.setItem('mdafc-tab',Math.random().toString(36).slice(2)),sessionStorage.getItem('mdafc-tab'))):'');
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY))||structuredClone(SEED);}catch(e){S=structuredClone(SEED);}
+S.dms=S.dms||[];
 S.uid=S.uid||'me'; S.profiles=S.profiles||{};
 function localSave(){try{localStorage.setItem(KEY,JSON.stringify(S));return true;}catch(e){return false;}}
 // Enregistre sur l'appareil + envoie les changements à la base partagée
@@ -463,10 +490,34 @@ const daysLeft=s=>Math.round((dt(s)-dt(todayStr()))/D);
 const fmtDate=(s,o={weekday:'long',day:'numeric',month:'long'})=>dt(s).toLocaleDateString('fr-FR',o);
 const mon=s=>dt(s).toLocaleDateString('fr-FR',{month:'short'}).replace('.','');
 function ago(t){const d=Date.now()-t;if(d<60e3)return'à l\'instant';if(d<H)return Math.floor(d/60e3)+' min';if(d<D)return hm(t);if(d<2*D)return'hier';return new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}
+function ask(msg,ok='Confirmer'){return new Promise(res=>{const d=$('#dlg');
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true"><p>${esc(msg)}</p><div class="acts"><button class="btn ghost small" data-r="0">Annuler</button><button class="btn small" data-r="1">${esc(ok)}</button></div></div>`;
+  d.hidden=false;const done=v=>{d.hidden=true;d.innerHTML='';res(v);};
+  d.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>done(b.dataset.r==='1'));d.querySelector('[data-r="1"]').focus();});}
+function askText(msg,def=''){return new Promise(res=>{const d=$('#dlg');
+  d.innerHTML=`<form class="box" role="dialog" aria-modal="true"><p>${esc(msg)}</p><input class="input" name="v" value="${esc(def)}" autocomplete="off"><div class="acts"><button type="button" class="btn ghost small" data-r="0">Annuler</button><button class="btn small">Valider</button></div></form>`;
+  d.hidden=false;const f=d.querySelector('form'),done=v=>{d.hidden=true;d.innerHTML='';res(v);};
+  f.onsubmit=e=>{e.preventDefault();done(f.v.value);};d.querySelector('[data-r="0"]').onclick=()=>done(null);setTimeout(()=>f.v.focus(),50);});}
+function choose(msg,opts){return new Promise(res=>{const d=$('#dlg');
+  d.innerHTML=`<div class="box" role="dialog" aria-modal="true"><p>${esc(msg)}</p><div class="acts" style="justify-content:stretch">${opts.map((o,i)=>`<button class="btn small" style="flex:1" data-i="${i}">${esc(o)}</button>`).join('')}</div><button class="btn ghost small" data-i="-1">Annuler</button></div>`;
+  d.hidden=false;d.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{d.hidden=true;d.innerHTML='';res(b.dataset.i==='-1'?null:opts[+b.dataset.i]);});});}
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
 const isBDE=()=>!!S.me?.bde;
 const unread=c=>c.msgs.filter(m=>!isMine(m.from)&&m.t>(S.read[c.id]||0)).length;
-const myChannels=()=>S.channels.filter(c=>c.bde?isBDE():true);
+const myChannels=()=>S.channels.filter(c=>c.bde?isBDE():c.promo?(isBDE()||c.promo===S.me.promo):true);
+// Messages privés : fil « bde:<étudiant> » (étudiant ↔ tout le bureau) ou « u:<a>|<b> » (entre deux personnes)
+const dmPeer=th=>th.startsWith('bde:')?(isBDE()?th.slice(4):'bde'):th.slice(2).split('|').find(x=>!isMine(x))||th.slice(2).split('|')[0];
+function dmChannel(th){
+  const peer=dmPeer(th),toBde=th.startsWith('bde:');
+  const name=toBde?(isBDE()?person(peer).name+' → BDE':'Bureau du BDE'):person(peer).name;
+  return {id:th,dm:true,peer,name,emoji:toBde?'🎓':'✉️',color:toBde?'#C9A46A':'#9A3445',
+    desc:toBde?(isBDE()?'Message adressé au BDE · visible par les 7 membres':'Les 7 membres du BDE lisent et répondent'):'Message privé',
+    msgs:(S.dms||[]).filter(m=>m.thread===th)};
+}
+const chanById=id=>S.channels.find(c=>c.id===id)||(/^(bde:|u:)/.test(id)?dmChannel(id):null);
+const myThreads=()=>[...new Set((S.dms||[]).map(m=>m.thread))].map(dmChannel).filter(c=>c.msgs.length);
+const startDM=other=>{if(isMine(other))return;openChat('u:'+[myId(),other].sort().join('|'));};
+const contactBDE=()=>{if(isBDE()){go('messages');return;}openChat('bde:'+S.uid);};
 const forMe=e=>!e.promos||e.promos.includes(S.me.promo)||isBDE();
 const evEnd=e=>e.end||e.date;
 const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -543,7 +594,7 @@ const PAGES={
 let page='home', parent='home', ui={};
 function go(p,state={}){ if(p==='bde'&&!isBDE()){toast('Espace réservé au BDE');p='profil';} if(TABS.some(t=>t[0]===p)) parent=p; page=p; ui=state; render(); $('#main').scrollTop=0; }
 function render(){
-  const total=myChannels().reduce((a,c)=>a+unread(c),0);
+  const total=[...myChannels(),...myThreads()].reduce((a,c)=>a+unread(c),0);
   $('#tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${k===parent?'active':''}" data-tab="${k}">${ic}${l}${k==='messages'&&total?`<span class="dot">${total}</span>`:''}</button>`).join('');
   $$('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
   const isTab=TABS.some(t=>t[0]===page);
@@ -586,7 +637,7 @@ function bindReminders(){
     if(perm==='granted'){notify('Rappel activé',S.reminders.find(r=>r.id===id).text);toast('Rappel activé : vous serez notifié(e)');}
     else toast('Rappel activé (notifications bloquées sur cet appareil)');
   });
-  $$('[data-delrem]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer ce rappel pour tout le monde ?'))return;S.reminders=S.reminders.filter(r=>r.id!==b.dataset.delrem);save();render();});
+  $$('[data-delrem]').forEach(b=>b.onclick=async()=>{if(!await ask('Supprimer ce rappel pour tout le monde ?'))return;S.reminders=S.reminders.filter(r=>r.id!==b.dataset.delrem);save();render();});
 }
 function notify(title,body){try{if('Notification' in window&&Notification.permission==='granted')new Notification(title,{body,icon:'logo-bordeaux.png'});}catch(e){}}
 function checkReminders(){
@@ -644,13 +695,14 @@ function vHome(){
       <button class="tile" data-go="boutique"><span class="ico">🧥</span>Pulls &amp; merch</button>
       <button class="tile" data-go="photos"><span class="ico">📸</span>Photos de classe</button>
       <button class="tile" data-go="stages"><span class="ico">💼</span>Stages &amp; alternances</button>
+      ${!isBDE()?'<button class="tile" id="tileBde"><span class="ico">✉️</span>Écrire au BDE</button>':''}
       <button class="tile" data-go="annuaire" data-state='{"seg":"anciens"}'><span class="ico">🎓</span>Réseau des anciens</button>
       <button class="tile" data-go="parrainage"><span class="ico">🤝</span>Parrainage</button>
       <button class="tile" data-go="annuaire"><span class="ico">👥</span>Annuaire</button>
     </div>
     <div class="section-title">Prochainement <button data-go="agenda">Calendrier</button></div>
     <div class="list">${next.map(eventRow).join('')||'<div class="empty">Aucun événement à venir.</div>'}</div>`;
-  bindReminders(); bindGo(); bindEventRows(); bindInstall();
+  bindReminders(); bindGo(); bindEventRows(); bindInstall(); if($('#tileBde'))$('#tileBde').onclick=contactBDE;
 }
 
 /* ================= Agenda ================= */
@@ -721,7 +773,7 @@ function showEvent(id){
   if($('#toBoard'))$('#toBoard').onclick=()=>{closeSheet();go('questions',{board:e.board});};
   $('#ics').onclick=()=>downloadICS(e);
   if($('#edit'))$('#edit').onclick=()=>editEvent(e);
-  if($('#delev'))$('#delev').onclick=()=>{if(!confirm('Supprimer « '+e.title+' » pour tout le monde ?'))return;S.events=S.events.filter(x=>x.id!==id);save();closeSheet();render();};
+  if($('#delev'))$('#delev').onclick=async()=>{if(!await ask('Supprimer « '+e.title+' » pour tout le monde ?'))return;S.events=S.events.filter(x=>x.id!==id);save();closeSheet();render();};
 }
 function downloadICS(e){
   const d=e.date.replace(/-/g,''),stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
@@ -774,7 +826,7 @@ function vBilletterie(){
       </div>${mine?`<div style="padding:0 14px 12px;background:var(--bg)"><button class="del" data-cancel="${e.id}">Annuler ma réservation</button></div>`:''}</div>`;}).join('')||'<div class="empty">Aucune billetterie ouverte pour le moment.</div>'}</div>`;
   $$('[data-book]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.book);e.booking.going.push(me);save();render();toast('Place réservée pour « '+e.title+' »');});
   $$('[data-pay]').forEach(a=>a.addEventListener('click',()=>{const e=S.events.find(x=>x.id===a.dataset.pay);
-    setTimeout(()=>{if(confirm('Avez-vous finalisé votre paiement HelloAsso pour « '+e.title+' » ?')){e.booking.going.push(me);save();render();toast('Place réservée');}},600);}));
+    setTimeout(async()=>{if(await ask('Avez-vous finalisé votre paiement HelloAsso pour « '+e.title+' » ?')){e.booking.going.push(me);save();render();toast('Place réservée');}},600);}));
   $$('[data-cancel]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.cancel);e.booking.going=e.booking.going.filter(x=>x!==me);save();render();toast('Réservation annulée');});
   $$('[data-list]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.list);
     openSheet(`<h3>Inscrits – ${esc(e.title)}</h3><div class="list">${e.booking.going.map(id=>`<div class="card row">${avatar(person(id),'sm')}<div class="meta"><b>${esc(person(id).name)}</b></div></div>`).join('')||'<div class="empty">Aucun inscrit pour l\'instant.</div>'}</div>`);});
@@ -794,7 +846,7 @@ function vBoutique(){
       ${isBDE()?`<div style="display:flex;gap:8px;margin-top:8px"><button class="btn ghost small" style="flex:1" data-editp="${p.id}">Modifier</button><button class="btn ghost small" data-delp="${p.id}">Retirer</button></div>`:''}</div></article>`).join('')||'<div class="empty">Aucun article pour le moment.</div>'}</div>`;
   $$('[data-thumb]').forEach(b=>b.onclick=()=>{const[id,i]=b.dataset.thumb.split('|');const p=S.products.find(x=>x.id===id);$('#img-'+id).src=p.imgs[i];b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
   $$('[data-editp]').forEach(b=>b.onclick=()=>editProduct(S.products.find(x=>x.id===b.dataset.editp)));
-  $$('[data-delp]').forEach(b=>b.onclick=()=>{const p=S.products.find(x=>x.id===b.dataset.delp);if(!confirm('Retirer « '+p.name+' » de la boutique ?'))return;S.products=S.products.filter(x=>x!==p);save();render();});
+  $$('[data-delp]').forEach(b=>b.onclick=async()=>{const p=S.products.find(x=>x.id===b.dataset.delp);if(!await ask('Retirer « '+p.name+' » de la boutique ?'))return;S.products=S.products.filter(x=>x!==p);save();render();});
   if(isBDE())setFab('Article',()=>editProduct());
 }
 function editProduct(p){
@@ -824,7 +876,7 @@ function vPhotos(){
       ${a.photos.length?'':'<div class="empty">Aucune photo pour l\'instant.</div>'}
       ${isBDE()?`<button class="del" id="delal" style="display:block;margin:18px auto">Supprimer l'album</button>`:''}`;
     $$('[data-ph]').forEach(b=>b.onclick=()=>lightbox(a,+b.dataset.ph));
-    if($('#delal'))$('#delal').onclick=()=>{if(!confirm('Supprimer l\'album « '+a.title+' » ?'))return;S.albums=S.albums.filter(x=>x!==a);save();go('photos');};
+    if($('#delal'))$('#delal').onclick=async()=>{if(!await ask('Supprimer l\'album « '+a.title+' » ?'))return;S.albums=S.albums.filter(x=>x!==a);save();go('photos');};
     if(isBDE())setFab('Photos',()=>pickPhotos(a));
     return;
   }
@@ -921,7 +973,7 @@ function editSubjects(promo,sem){
     <div class="list">${subs.map((x,i)=>`<div class="card row" style="padding:10px 12px"><div class="meta"><b style="font-size:14px">${esc(x.n)}</b><span>${x.t}${x.d?' · '+esc(x.d):''}</span></div><button class="del" data-rm="${i}">retirer</button></div>`).join('')||'<div class="empty">Aucune matière.</div>'}</div>
     <div class="section-title">Semestre en cours pour toute l'application</div>
     <div class="seg">${['S1','S2'].map(s=>`<button class="${s===S.semester?'on':''}" data-cur="${s}">${s}</button>`).join('')}</div>`);
-  $$('[data-rm]').forEach(b=>b.onclick=()=>{if(!confirm('Retirer « '+subs[+b.dataset.rm].n+' » ? Les documents déjà partagés restent accessibles via la recherche.'))return;subs.splice(+b.dataset.rm,1);save();editSubjects(promo,sem);render();});
+  $$('[data-rm]').forEach(b=>b.onclick=async()=>{if(!await ask('Retirer « '+subs[+b.dataset.rm].n+' » ? Les documents déjà partagés restent accessibles via la recherche.'))return;subs.splice(+b.dataset.rm,1);save();editSubjects(promo,sem);render();});
   $$('[data-cur]').forEach(b=>b.onclick=()=>{S.semester=b.dataset.cur;save();editSubjects(promo,sem);render();toast('Semestre en cours : '+S.semester);});
 }
 function fileRow(f){
@@ -967,7 +1019,7 @@ function vSondages(){
   $$('[data-vote]').forEach(b=>b.onclick=()=>{const[id,i]=b.dataset.vote.split('|');const p=S.polls.find(x=>x.id===id),me=myId();
     p.options.forEach(o=>o.votes=o.votes.filter(v=>v!==me));p.options[+i].votes.push(me);save();render();});
   $$('[data-close]').forEach(b=>b.onclick=()=>{const p=S.polls.find(x=>x.id===b.dataset.close);p.closed=!p.closed;save();render();});
-  $$('[data-delpoll]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer ce sondage ?'))return;S.polls=S.polls.filter(x=>x.id!==b.dataset.delpoll);save();render();});
+  $$('[data-delpoll]').forEach(b=>b.onclick=async()=>{if(!await ask('Supprimer ce sondage ?'))return;S.polls=S.polls.filter(x=>x.id!==b.dataset.delpoll);save();render();});
   if(isBDE())setFab('Sondage',newPoll);
 }
 function newPoll(){
@@ -998,8 +1050,8 @@ function vQuestions(){
         ${q.answer?`<div class="answer"><b>Réponse :</b> ${esc(q.answer)}</div>`:''}</div></div>`).join('')||'<div class="empty">Aucune question pour l\'instant. Lancez-vous !</div>'}</div>`;
     $('#askF').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);b.questions.push({id:uid('qq'),text:f.get('q').trim(),anon:!!f.get('anon'),author:myId(),likes:[],t:Date.now(),answer:''});save();render();toast('Question envoyée');};
     $$('[data-like]').forEach(x=>x.onclick=()=>{const q=b.questions.find(y=>y.id===x.dataset.like);const i=q.likes.indexOf(me);i<0?q.likes.push(me):q.likes.splice(i,1);save();render();});
-    $$('[data-ans]').forEach(x=>x.onclick=()=>{const q=b.questions.find(y=>y.id===x.dataset.ans);const a=prompt('Réponse :',q.answer||'');if(a!==null){q.answer=a.trim();save();render();}});
-    $$('[data-delq]').forEach(x=>x.onclick=()=>{if(!confirm('Supprimer cette question ?'))return;b.questions=b.questions.filter(y=>y.id!==x.dataset.delq);save();render();});
+    $$('[data-ans]').forEach(x=>x.onclick=async()=>{const q=b.questions.find(y=>y.id===x.dataset.ans);const a=await askText('Réponse :',q.answer||'');if(a!==null){q.answer=a.trim();save();render();}});
+    $$('[data-delq]').forEach(x=>x.onclick=async()=>{if(!await ask('Supprimer cette question ?'))return;b.questions=b.questions.filter(y=>y.id!==x.dataset.delq);save();render();});
     if($('#export'))$('#export').onclick=async()=>{const txt=b.title+'\n\n'+qs.map((q,i)=>`${i+1}. ${q.text} (${q.likes.length} soutien${q.likes.length>1?'s':''})`).join('\n');
       try{await navigator.clipboard.writeText(txt);toast('Questions copiées : collez-les dans un mail');}catch(e){openSheet(`<h3>Questions</h3><textarea class="input" rows="12">${esc(txt)}</textarea>`);}};
     return;
@@ -1030,7 +1082,7 @@ function vStages(){
       <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">${o.link?`<a class="btn small" href="${esc(o.link)}" target="_blank" rel="noopener">Voir l'offre ${small(I.ext,14)}</a>`:''}${o.contact?`<span class="sub">✉️ ${esc(o.contact)}</span>`:''}</div>
       <div class="sub" style="margin-top:8px">Partagée par ${esc(person(o.author).name)}${isMine(o.author)||isBDE()?` · <button class="del" data-deloff="${o.id}">retirer</button>`:''}</div></div>`).join('')||'<div class="empty">Aucune offre pour le moment.<br>Vous avez repéré un stage ou une alternance ? Partagez-le !</div>'}</div>`;
   $$('[data-f]').forEach(b=>b.onclick=()=>{ui.filter=b.dataset.f;render();});
-  $$('[data-deloff]').forEach(b=>b.onclick=()=>{if(!confirm('Retirer cette offre ?'))return;S.offers=S.offers.filter(x=>x.id!==b.dataset.deloff);save();render();});
+  $$('[data-deloff]').forEach(b=>b.onclick=async()=>{if(!await ask('Retirer cette offre ?'))return;S.offers=S.offers.filter(x=>x.id!==b.dataset.deloff);save();render();});
   setFab('Offre',()=>{
     openSheet(`<h3>Partager une offre</h3><form id="f">
       <label class="field">Type<select name="type"><option>Stage</option><option>Alternance</option><option>Collaboration</option><option>Job étudiant</option></select></label>
@@ -1082,12 +1134,17 @@ function vMessages(){
   const row=({c,last})=>{const u=unread(c);
     const preview=last?(isMine(last.from)?'Vous : ':person(last.from).name.split(' ')[0]+' : ')+last.text:(c.desc||'');
     return `<button class="card row" data-ch="${c.id}"><div class="avatar ch" style="background:${c.color}">${c.emoji}</div><div class="meta"><b>${esc(c.name)}</b><span>${esc(preview)}</span></div><div class="side">${last?ago(last.t):''}${u?`<span class="pill">${u}</span>`:''}</div></button>`;};
-  $('#main').innerHTML=`<div class="section-title">Salons</div><div class="list">${list.map(row).join('')}</div>`;
+  const th=myThreads().map(c=>({c,last:c.msgs[c.msgs.length-1]})).sort((a,b)=>b.last.t-a.last.t);
+  $('#main').innerHTML=`<div class="section-title">Salons</div><div class="list">${list.map(row).join('')}</div>
+    <div class="section-title">Messages privés</div>
+    ${!isBDE()?`<button class="card row" id="toBde" style="margin-bottom:10px"><div class="avatar ch" style="background:var(--gold)">🎓</div><div class="meta"><b>Écrire au BDE</b><span>Une question ? Les 7 membres du bureau vous répondent</span></div>${chevron()}</button>`:''}
+    <div class="list">${th.map(row).join('')||'<div class="empty">Pour écrire à quelqu\'un, ouvrez sa fiche dans l\'Annuaire.</div>'}</div>`;
   $$('[data-ch]').forEach(b=>b.onclick=()=>openChat(b.dataset.ch));
+  if($('#toBde'))$('#toBde').onclick=contactBDE;
 }
 let current=null;
 function openChat(id){
-  current=S.channels.find(c=>c.id===id);
+  current=chanById(id);if(!current)return;
   $('#chatHeader').innerHTML=`<button class="icon-btn" id="back" aria-label="Retour">${I.back}</button>
     <div class="badge" style="background:${current.color};font-size:20px">${current.emoji}</div>
     <h2>${esc(current.name)}<small>${esc(current.desc)}</small></h2>`;
@@ -1104,7 +1161,8 @@ function drawMessages(){
   const b=$('#messages');b.scrollTop=b.scrollHeight;
 }
 $('#composer').onsubmit=e=>{e.preventDefault();const v=$('#msgInput').value.trim();if(!v||!current)return;
-  current.msgs.push({id:uid('m'),from:myId(),name:S.me.name,text:v,t:Date.now()});S.read[current.id]=Date.now();save();$('#msgInput').value='';drawMessages();};
+  if(current.dm){S.dms=S.dms||[];const m={id:uid('d'),thread:current.id,to:current.peer,from:myId(),name:S.me.name,text:v,t:Date.now()};S.dms.push(m);current.msgs.push(m);}
+  else current.msgs.push({id:uid('m'),from:myId(),name:S.me.name,text:v,t:Date.now()});S.read[current.id]=Date.now();save();$('#msgInput').value='';drawMessages();};
 
 /* ================= Annuaire (étudiants + anciens) ================= */
 let ANC=null,ancLoading=false;
@@ -1113,12 +1171,13 @@ function vAnnuaire(){
   let html=`<div class="seg"><button data-seg="etudiants" class="${seg==='etudiants'?'on':''}">Étudiants</button><button data-seg="anciens" class="${seg==='anciens'?'on':''}">Réseau des anciens</button></div>`;
   if(seg==='etudiants'){
     html+=`<div class="section-title">Bureau du BDE 2026-2027</div>
-      <div class="list">${BDE_MEMBERS.map(m=>`<div class="card row">${avatar(m)}<div class="meta"><b>${esc(m.name)}</b><span>${esc(m.role)}</span></div><span class="tag gold">BDE</span></div>`).join('')}</div>
-      ${(()=>{const others=Object.entries(S.profiles).filter(([id])=>id!==S.uid).map(([,p])=>p);const sf=ui.pf||'Tous';
+      ${!isBDE()?`<button class="btn block small" id="annBde" style="margin-bottom:10px">✉️ Écrire au BDE (les 7 membres)</button>`:''}
+      <div class="list">${BDE_MEMBERS.map(m=>`<button class="card row" data-dm="${m.id}">${avatar(m)}<div class="meta"><b>${esc(m.name)}</b><span>${esc(m.role)}</span></div><span class="tag gold">BDE</span>${isMine(m.id)?'':'<span class="sub" style="font-size:18px">✉️</span>'}</button>`).join('')}</div>
+      ${(()=>{const others=Object.entries(S.profiles).filter(([id])=>id!==S.uid).map(([id,p])=>({...p,id}));const sf=ui.pf||'Tous';
         const list=[{...S.me,me:true},...others].filter(p=>sf==='Tous'||p.promo===sf).sort((a,b)=>(b.me?1:0)-(a.me?1:0)||a.name.localeCompare(b.name,'fr'));
         return `<div class="section-title">Étudiants inscrits (${others.length+1})</div>
         <div class="chips">${['Tous',...PROMOS].map(t=>`<button class="chip ${t===sf?'on':''}" data-pf="${t}">${t}</button>`).join('')}</div>
-        <div class="list">${list.map(p=>`<div class="card row">${avatar(p)}<div class="meta"><b>${esc(p.name)}${p.me?' (vous)':''}</b><span>${esc(p.promo||'')}</span></div></div>`).join('')}</div>
+        <div class="list">${list.map(p=>p.me?`<div class="card row">${avatar(p)}<div class="meta"><b>${esc(p.name)} (vous)</b><span>${esc(p.promo||'')}</span></div></div>`:`<button class="card row" data-dm="${p.id}">${avatar(p)}<div class="meta"><b>${esc(p.name)}</b><span>${esc(p.promo||'')}</span></div><span class="sub" style="font-size:18px">✉️</span></button>`).join('')}</div>
         ${Backend.mode==='local'?'<div class="note" style="margin-top:12px">Mode démo : les autres étudiants apparaîtront ici une fois la base partagée en place.</div>':''}`;})()}`;
     $('#main').innerHTML=html;
   } else if(!ANC){
@@ -1145,8 +1204,24 @@ function vAnnuaire(){
       openSheet(`<div class="profile-head">${avatar({name:a.n})}<h3>${esc(a.n)}</h3><p>Promo ${esc(a.p||'inconnue')}</p></div>
         <div class="card kv">${a.c?`<b>Cabinet / entreprise</b>${esc(a.c)}`:''}${a.j?`<b>Poste / situation</b>${esc(a.j)}`:''}${a.v||a.y?`<b>Ville</b>${esc([a.v,a.y].filter(Boolean).join(', '))}`:''}
         ${a.m?`<b>E-mail professionnel</b><a class="link" href="mailto:${esc(a.m)}">${esc(a.m)}</a>`:''}${a.t?`<b>Téléphone professionnel</b><a class="link" href="tel:${esc(a.t.replace(/\s/g,''))}">${esc(a.t)}</a>`:''}
-        ${!a.c&&!a.j&&!a.m&&!a.t?'<span class="sub">Pas d\'informations professionnelles renseignées.</span>':''}</div>`);});
+        ${a.l?`<b>LinkedIn</b><a class="link" href="${esc(a.l)}" target="_blank" rel="noopener">${esc(a.l.replace(/^https?:\/\/(www\.)?/,''))}</a>`:''}
+        ${!a.c&&!a.j&&!a.m&&!a.t&&!a.l?'<span class="sub">Pas d\'informations professionnelles renseignées.</span>':''}</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">${!a.l?`<a class="btn ghost small" style="flex:1;text-align:center" target="_blank" rel="noopener" href="https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(a.n+(a.c?' '+a.c:''))}">Chercher sur LinkedIn</a>`:''}
+        ${isBDE()&&a.id!=null?`<button class="btn small" style="flex:1" id="ancEdit">Compléter la fiche</button>`:''}</div>`);
+      if($('#ancEdit'))$('#ancEdit').onclick=()=>{
+        openSheet(`<h3>${esc(a.n)}</h3><form id="af">
+          <label class="field">E-mail professionnel<input name="m" type="email" value="${esc(a.m||'')}"></label>
+          <label class="field">Profil LinkedIn (lien)<input name="l" type="url" placeholder="https://www.linkedin.com/in/…" value="${esc(a.l||'')}"></label>
+          <label class="field">Cabinet / entreprise<input name="c" value="${esc(a.c||'')}"></label>
+          <label class="field">Poste<input name="j" value="${esc(a.j||'')}"></label>
+          <label class="field">Ville<input name="v" value="${esc(a.v||'')}"></label>
+          <label class="field">Téléphone professionnel<input name="t" value="${esc(a.t||'')}"></label>
+          <button class="btn block">Enregistrer</button></form>`);
+        $('#af').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),ch={};['m','l','c','j','v','t'].forEach(k=>ch[k]=f.get(k).trim());
+          try{await Backend.updateAncien(a.id,ch);Object.assign(a,ch);closeSheet();render();toast('Fiche mise à jour');}catch(err){toast('Échec : '+(err.message||err));}};};});
   }
+  $$('[data-dm]').forEach(b=>b.onclick=()=>startDM(b.dataset.dm));
+  if($('#annBde'))$('#annBde').onclick=contactBDE;
   $$('[data-seg]').forEach(b=>b.onclick=()=>go('annuaire',{seg:b.dataset.seg}));
   $$('[data-pf]').forEach(b=>b.onclick=()=>{ui.pf=b.dataset.pf;render();});
 }
@@ -1183,14 +1258,14 @@ function vBDE(){
       <form id="pwF" style="display:flex;gap:8px"><input class="input" type="password" name="pw" minlength="8" required placeholder="Nouveau mot de passe" autocomplete="new-password" style="padding:10px 12px"><button class="btn small">Changer</button></form></div>`}`;
   $$('[data-tf]').forEach(b=>b.onclick=()=>{ui.filter=b.dataset.tf;render();});
   $$('[data-done]').forEach(b=>b.onclick=()=>{const t=S.todos.find(x=>x.id===b.dataset.done);t.done=!t.done;save();render();});
-  $$('[data-deltodo]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer cette tâche ?'))return;S.todos=S.todos.filter(x=>x.id!==b.dataset.deltodo);save();render();});
+  $$('[data-deltodo]').forEach(b=>b.onclick=async()=>{if(!await ask('Supprimer cette tâche ?'))return;S.todos=S.todos.filter(x=>x.id!==b.dataset.deltodo);save();render();});
   $('#addTodo').onclick=()=>{
     openSheet(`<h3>Nouvelle tâche</h3><form id="f"><label class="field">Tâche<input name="t" required placeholder="Réserver la salle pour la réunion CRFPA"></label>
       <div class="grid2"><label class="field">Pour<select name="w"><option value="">Tout le bureau</option>${BDE_MEMBERS.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>
       <label class="field">Échéance<input type="date" name="d"></label></div><button class="btn block">Ajouter</button></form>`);
     $('#f').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);S.todos.push({id:uid('t'),text:fd.get('t').trim(),who:fd.get('w'),due:fd.get('d'),done:false,by:S.me.bde,t:Date.now()});save();closeSheet();render();toast('Tâche ajoutée pour le bureau');};
   };
-  $('#editDrive').onclick=()=>{const u=prompt('Lien du Google Drive du BDE (de préférence le lien de partage du dossier) :',S.bdeDrive);if(u&&/^https?:\/\//.test(u.trim())){S.bdeDrive=u.trim();save();render();}};
+  $('#editDrive').onclick=async()=>{const u=await askText('Lien du Google Drive du BDE (de préférence le lien de partage du dossier) :',S.bdeDrive);if(u&&/^https?:\/\//.test(u.trim())){S.bdeDrive=u.trim();save();render();}};
   const acts={rappel:newReminder,event:()=>editEvent(),poll:newPoll,board:()=>go('questions'),shop:()=>go('boutique'),album:()=>go('photos'),subjects:()=>go('drive'),pairs:()=>go('parrainage')};
   $$('[data-act]').forEach(b=>b.onclick=acts[b.dataset.act]);
   $('#bdeChat').onclick=()=>openChat('cb');
@@ -1214,14 +1289,16 @@ async function drawCodes(){
     $$('[data-copy]').forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(b.dataset.copy).then(()=>toast('Code copié'),()=>toast(b.dataset.copy));});
     $$('[data-code]').forEach(b=>b.onclick=async()=>{const p=b.dataset.code;
       const sug=p.replace(' ','').toUpperCase()+'-'+Array.from(crypto.getRandomValues(new Uint8Array(5)),x=>'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[x%31]).join('');
-      const c=prompt('Nouveau code pour '+p+' (6 caractères minimum) :',sug);if(!c)return;
+      const c=await askText('Nouveau code pour '+p+' (6 caractères minimum) :',sug);if(!c)return;
       try{await Backend.setCode(p,c);toast('Code '+p+' modifié');drawCodes();}catch(e){toast(e.message);}});
     $('#studList').onclick=()=>{
       const name=id=>S.profiles[id]?.name||'(profil non renseigné)';
       const list=studs.slice().sort((a,b)=>a.promo.localeCompare(b.promo)||name(a.id).localeCompare(name(b.id),'fr'));
       openSheet(`<h3>Étudiants inscrits (${studs.length})</h3><p class="sub" style="margin-bottom:10px">Retirer quelqu'un lui coupe l'accès. Pensez à changer le code de sa promo pour qu'il ne puisse pas revenir.</p>
-        <div class="list">${list.map(x=>`<div class="card row"><div class="meta"><b>${esc(name(x.id))}</b><span>${esc(x.promo)} · inscrit le ${new Date(x.joined_at).toLocaleDateString('fr-FR')}</span></div><button class="btn ghost small" data-kick="${x.id}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>`);
-      $$('[data-kick]').forEach(b=>b.onclick=async()=>{if(!confirm('Retirer '+name(b.dataset.kick)+" de l'application ?"))return;
+        <div class="list">${list.map(x=>`<div class="card row"><div class="meta"><b>${esc(name(x.id))}</b><span>${esc(x.promo)} · inscrit le ${new Date(x.joined_at).toLocaleDateString('fr-FR')}</span></div><button class="btn ghost small" data-mv="${x.id}">Promo</button><button class="btn ghost small" data-kick="${x.id}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>`);
+      $$('[data-mv]').forEach(b=>b.onclick=async()=>{const p=await choose('Nouvelle promo pour '+name(b.dataset.mv)+' :',PROMOS);if(!p)return;
+        try{await Backend.setStudentPromo(b.dataset.mv,p);toast(name(b.dataset.mv)+' est maintenant en '+p);closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
+      $$('[data-kick]').forEach(b=>b.onclick=async()=>{if(!await ask('Retirer '+name(b.dataset.kick)+" de l'application ?"))return;
         try{await Backend.removeStudent(b.dataset.kick);toast('Accès retiré');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
     };
   }catch(e){box.innerHTML=`<p class="sub">Codes indisponibles : ${esc(e.message||String(e))}</p>`;}
@@ -1233,7 +1310,8 @@ function vProfil(){
   $('#main').innerHTML=`<div class="profile-head">${avatar(me)}<h3>${esc(me.name)}</h3><p>${esc(me.promo)}${m?' · '+esc(m.role)+' du BDE':''}</p></div>
    <form class="card" id="pf" style="display:flex;flex-direction:column;gap:12px">
      <label class="field">Prénom et nom<input name="name" value="${esc(me.name)}" required></label>
-     <label class="field">Promotion<select name="promo">${PROMOS.map(p=>`<option ${p===me.promo?'selected':''}>${p}</option>`).join('')}</select></label>
+     ${Backend.mode==='local'?`<label class="field">Promotion<select name="promo">${PROMOS.map(p=>`<option ${p===me.promo?'selected':''}>${p}</option>`).join('')}</select></label>`
+       :`<div class="field">Promotion<div style="display:flex;gap:8px;align-items:center"><div class="input" style="flex:1">${esc(me.promo)}</div><button type="button" class="btn ghost small" id="chgPromo">Changer</button></div></div>`}
      <label class="field">Centres d'intérêt<input name="interests" value="${esc(me.interests||'')}" placeholder="Ex. Fiscalité, M&amp;A"></label>
      <button class="btn block">Enregistrer</button></form>
    <div class="section-title">Connexion BDE</div>
@@ -1256,7 +1334,7 @@ function vProfil(){
    <button class="btn ghost block" id="reset" style="margin-top:18px">Réinitialiser la démo</button>`;
   $('#nstate').textContent=!('Notification' in window)?'non pris en charge sur ce navigateur':Notification.permission==='granted'?'autorisées':Notification.permission==='denied'?'bloquées':'pas encore demandées';
   bindGo();
-  $('#pf').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);Object.assign(me,{name:f.get('name').trim(),promo:f.get('promo'),interests:f.get('interests').trim()});save();Backend.saveProfile(me);render();toast('Profil mis à jour');};
+  $('#pf').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);Object.assign(me,{name:f.get('name').trim(),promo:f.get('promo')||me.promo,interests:f.get('interests').trim()});save();Backend.saveProfile(me);render();toast('Profil mis à jour');};
   if($('#bdeMode'))$('#bdeMode').onclick=()=>{const F=$('#bdeF'),c=F.dataset.mode!=='create';F.dataset.mode=c?'create':'login';
     F.pw2.hidden=!c;F.pw2.required=c;F.pw.autocomplete=c?'new-password':'current-password';
     $('#bdeGo').textContent=c?'Créer mon compte BDE':'Se connecter';
@@ -1276,8 +1354,11 @@ function vProfil(){
   if($('#bdeOff'))$('#bdeOff').onclick=async()=>{
     if(Backend.mode!=='local'){await Backend.flush();S.uid=await Backend.logoutBDE();me.id=S.uid;me.bde=null;localSave();location.reload();return;}
     me.bde=null;save();render();toast('Déconnecté(e) du BDE');};
+  if($('#chgPromo'))$('#chgPromo').onclick=async()=>{
+    const c=await askText('Entrez le code de votre promo (le BDE vous le donne). Exemple : MAG3-XXXXX');if(!c)return;
+    try{const promo=await Backend.joinPromo(c);me.promo=promo;save();Backend.saveProfile(me);render();toast('Vous êtes maintenant en '+promo);}catch(e){toast(e.message);}};
   $('#reset').hidden=Backend.mode==='supabase';
-  $('#reset').onclick=()=>{if(confirm('Effacer vos données de démonstration ?')){try{localStorage.removeItem(KEY)}catch(e){}location.reload();}};
+  $('#reset').onclick=async()=>{if(await ask('Effacer vos données de démonstration ?')){try{localStorage.removeItem(KEY)}catch(e){}location.reload();}};
 }
 
 /* ================= Feuille modale ================= */
@@ -1290,7 +1371,7 @@ let renderPending=false;
 function liveRender(){
   localSave();
   if(!entered||!S.me)return;
-  if(current){current=S.channels.find(c=>c.id===current.id);if(current){drawMessages();S.read[current.id]=Date.now();}}
+  if(current){current=chanById(current.id);if(current){drawMessages();S.read[current.id]=Date.now();}}
   const a=document.activeElement;
   if($('#sheet').classList.contains('show')||!$('#lightbox').hidden||(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))){renderPending=true;return;}
   const st=$('#main').scrollTop;render();$('#main').scrollTop=st;
