@@ -1,0 +1,15 @@
+{
+  "name": "MDAFC – Magistère DAFC Aix",
+  "short_name": "MDAFC",
+  "description": "L'application des étudiants du Magistère Droit des Affaires, Fiscalité et Comptabilité d'Aix-en-Provence",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6EADF",
+  "theme_color": "#7B1E2E",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

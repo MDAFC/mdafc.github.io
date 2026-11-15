@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7B1E2E">
+<title>MDAFC</title>
+<link rel="icon" href="logo-bordeaux.png">
+<link rel="apple-touch-icon" href="apple-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MDAFC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#7B1E2E; --red-dark:#5E1422; --red-soft:#F3E1DF;
+  --navy-soft:#F1E4D6;
+  --cream:#F6EADF; --gold:#C9A46A; --gold-soft:#F5EBDA;
+  --bg:#FAF4EC; --card:#FFFDF9; --text:#2E1418; --muted:#8A6F68; --line:#EADBCB;
+  --green:#2F6B3A; --green-soft:#E3F1E4;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:Inter,system-ui,sans-serif;background:#E9DCCD;color:var(--text);display:flex;justify-content:center}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font:inherit;color:inherit}
+a{color:inherit}
+.app{position:relative;width:100%;max-width:430px;height:100dvh;background:var(--bg);overflow:hidden;overflow:clip;display:flex;flex-direction:column;box-shadow:0 0 40px rgba(90,18,32,.15)}
+[hidden]{display:none!important}
+
+/* Splash */
+.splash{position:absolute;inset:0;z-index:70;background:#F9EBE1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:24px;transition:opacity .5s,transform .5s}
+.splash.hide{opacity:0;transform:scale(1.04);pointer-events:none}
+.splash img{width:min(80vw,312px);-webkit-mask-image:radial-gradient(ellipse closest-side,#000 88%,transparent 100%);mask-image:radial-gradient(ellipse closest-side,#000 88%,transparent 100%);animation:pop .9s cubic-bezier(.2,.9,.3,1.2) both}
+.splash h1{font-family:"Libre Baskerville",serif;color:var(--red);font-size:34px;letter-spacing:.12em;animation:fade .8s .4s both}
+.splash p{color:var(--muted);text-align:center;font-size:14px;max-width:290px;animation:fade .8s .55s both}
+.splash .stripe{position:absolute;bottom:0;left:0;right:0;height:8px;background:var(--red)}
+@keyframes pop{from{opacity:0;transform:scale(.6) rotate(-12deg)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--red);color:var(--cream);padding:13px 24px;border-radius:999px;font-weight:600;box-shadow:0 6px 18px rgba(123,30,46,.28);transition:transform .15s,background .15s;text-decoration:none;font-size:15px}
+.btn:active{transform:scale(.97);background:var(--red-dark)}
+.btn.ghost{background:var(--navy-soft);color:var(--red);box-shadow:none}
+.btn.gold{background:var(--gold);color:#3A220C;box-shadow:0 6px 18px rgba(201,164,106,.35)}
+.btn.small{padding:8px 14px;font-size:13px;box-shadow:none}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.link{color:var(--red);font-weight:600;font-size:13px}
+.del{color:var(--muted);font-size:12px;text-decoration:underline}
+
+.onboard{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;animation:fade .5s both}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:500}
+.field input,.field select,.field textarea,.input{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;outline:none;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus,.input:focus{border-color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.checks label{display:flex;align-items:center;gap:6px;background:var(--bg);border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;color:var(--text)}
+
+/* Header */
+header{background:var(--red);color:var(--cream);padding:calc(12px + env(safe-area-inset-top)) 14px 12px;display:flex;align-items:center;gap:12px;flex-shrink:0;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--gold)}
+header .badge{width:40px;height:40px;border-radius:50%;background:#F6EAE3;display:grid;place-items:center;overflow:hidden;flex-shrink:0}
+header .badge img{width:52px;max-width:none}
+header h2{font-family:"Libre Baskerville",serif;font-size:18px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header small{display:block;font-family:Inter;font-weight:400;font-size:12px;opacity:.8;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(246,234,223,.15);flex-shrink:0}
+.icon-btn svg{width:20px;height:20px}
+.me-btn{width:36px;height:36px;border-radius:50%;background:var(--cream);color:var(--red);font-weight:700;font-size:13px;display:grid;place-items:center;flex-shrink:0;position:relative}
+.me-btn .crown{position:absolute;bottom:-4px;right:-6px;background:var(--gold);color:#3A220C;font-size:9px;border-radius:6px;padding:1px 4px;font-weight:700}
+
+main{flex:1;overflow-y:auto;padding:16px 16px 96px}
+.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:20px 4px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.section-title:first-child{margin-top:4px}
+.section-title button{font-size:12px;color:var(--red);text-transform:none;letter-spacing:0;font-weight:600}
+
+nav.tabs{display:flex;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));flex-shrink:0}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);padding:6px 0;border-radius:12px;position:relative}
+nav.tabs button svg{width:23px;height:23px}
+nav.tabs button.active{color:var(--red);font-weight:600}
+nav.tabs .dot{position:absolute;top:2px;right:calc(50% - 20px);min-width:17px;height:17px;border-radius:9px;background:var(--red);color:var(--cream);font-size:10px;display:grid;place-items:center;padding:0 4px;border:2px solid var(--card)}
+
+.card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 1px 3px rgba(90,18,32,.06);border:1px solid var(--line)}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:var(--cream);flex-shrink:0;font-size:15px}
+.avatar.sm{width:36px;height:36px;font-size:12.5px}
+.avatar.ch{border-radius:14px;font-size:20px}
+.row .meta{flex:1;min-width:0}
+.row .meta b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .meta span{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-size:11px;color:var(--muted)}
+.pill{background:var(--red);color:var(--cream);border-radius:999px;font-size:11px;font-weight:700;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--navy-soft);color:var(--red);white-space:nowrap}
+.tag.gold{background:var(--gold-soft);color:#8A6326}
+.tag.green{background:var(--green-soft);color:var(--green)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.chip{padding:8px 14px;border-radius:999px;background:var(--card);border:1.5px solid var(--line);font-size:13px;font-weight:500;white-space:nowrap}
+.chip.on{background:var(--red);border-color:var(--red);color:var(--cream)}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.search input{border:none;outline:none;flex:1;background:none;font-size:15px;min-width:0}
+.search svg{width:18px;height:18px;color:var(--muted);flex-shrink:0}
+.empty{text-align:center;color:var(--muted);padding:26px 20px;font-size:14px;line-height:1.5}
+.note{background:var(--gold-soft);border:1px dashed var(--gold);color:#6B4A1A;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.45;margin-bottom:12px}
+.seg{display:flex;background:var(--navy-soft);border-radius:12px;padding:4px;margin-bottom:12px}
+.seg button{flex:1;padding:8px 4px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--red);box-shadow:0 1px 3px rgba(90,18,32,.1)}
+
+/* Home */
+.hello{margin:4px 2px 4px}
+.hello h3{font-family:"Libre Baskerville",serif;color:var(--red);font-size:21px}
+.hello p{color:var(--muted);font-size:13.5px;margin-top:3px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;font-weight:600;text-align:center;color:var(--red);position:relative}
+.tile .ico{width:44px;height:44px;border-radius:14px;background:var(--navy-soft);display:grid;place-items:center;font-size:22px}
+.tile.bde{background:var(--red);color:var(--cream);border-color:var(--red)}
+.tile.bde .ico{background:rgba(246,234,223,.15)}
+.tile .pill{position:absolute;top:8px;right:8px}
+
+/* Reminders */
+.reminder{display:flex;gap:12px;align-items:flex-start;border-left:4px solid var(--gold)}
+.count{min-width:54px;text-align:center;border-radius:12px;background:var(--red);color:var(--cream);padding:8px 4px}
+.count b{display:block;font-family:"Libre Baskerville",serif;font-size:19px}
+.count span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;opacity:.85}
+.reminder .txt{flex:1;font-size:14px;line-height:1.45;min-width:0}
+.reminder .txt small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.bell{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--navy-soft);color:var(--muted);flex-shrink:0}
+.bell.on{background:var(--gold);color:#3A220C}
+.bell svg{width:19px;height:19px}
+
+/* Calendar */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-head h3{font-family:"Libre Baskerville",serif;color:var(--red);font-size:17px;text-transform:capitalize}
+.cal-head .icon-btn{background:var(--navy-soft);color:var(--red)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dow{font-size:11px;color:var(--muted);text-align:center;font-weight:600;padding:4px 0}
+.cal .day{aspect-ratio:1/1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13.5px;background:var(--card);border:1px solid var(--line)}
+.cal .day.out{opacity:.35}
+.cal .day.today{border:2px solid var(--gold);font-weight:700}
+.cal .day.sel{background:var(--red);color:var(--cream);border-color:var(--red)}
+.cal .dots{display:flex;gap:2px;height:5px}
+.cal .dots i{width:5px;height:5px;border-radius:50%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:12px 2px 4px;font-size:11.5px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%}
+.month-sep{font-family:"Libre Baskerville",serif;color:var(--red);font-size:15px;margin:18px 4px 8px;text-transform:capitalize}
+.event{display:flex;gap:14px;text-align:left;width:100%}
+.date{width:58px;flex-shrink:0;border-radius:14px;overflow:hidden;text-align:center;border:1.5px solid var(--red);align-self:flex-start;background:var(--card)}
+.date .m{background:var(--red);color:var(--cream);font-size:11px;font-weight:700;text-transform:uppercase;padding:4px 0;letter-spacing:.06em}
+.date .d{font-family:"Libre Baskerville",serif;font-size:20px;padding:5px 0;color:var(--red);white-space:nowrap}
+.date .d.range{font-size:14px;padding:9px 0}
+.event h3{font-size:15px;margin-bottom:4px}
+.event .info{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* Billetterie */
+.ticket{padding:0;overflow:hidden}
+.ticket .top{padding:14px;display:flex;gap:14px}
+.ticket .bottom{border-top:2px dashed var(--line);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg)}
+.gauge{height:6px;background:var(--navy-soft);border-radius:3px;overflow:hidden;margin-top:8px}
+.gauge i{display:block;height:100%;background:var(--red)}
+.price{font-family:"Libre Baskerville",serif;color:var(--red);font-size:18px;white-space:nowrap}
+.booked{display:inline-flex;align-items:center;gap:6px;color:var(--green);background:var(--green-soft);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600}
+
+/* Shop */
+.product{padding:0;overflow:hidden}
+.product .pic{height:230px;background:#F7EEE6;display:flex;align-items:center;justify-content:center;position:relative}
+.product .pic img{max-height:100%;max-width:100%;object-fit:contain}
+.product .pic .tag{position:absolute;top:12px;left:12px}
+.product .body{padding:14px}
+.product h3{font-family:"Libre Baskerville",serif;color:var(--red);font-size:17px}
+.product p{font-size:13.5px;color:#5B4440;margin:6px 0 10px;line-height:1.45}
+.sizes{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.sizes span{border:1.5px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:600;color:var(--muted)}
+.thumbs{display:flex;gap:8px;position:absolute;bottom:10px;right:10px}
+.thumbs button{width:44px;height:44px;border-radius:10px;overflow:hidden;border:2px solid var(--card);background:#F6EAE3}
+.thumbs button.on{border-color:var(--red)}
+.thumbs img{width:100%;height:100%;object-fit:cover}
+
+/* Photos */
+.album-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.album{border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--line);text-align:left}
+.album .cover{aspect-ratio:4/3;background:#EADBCB center/cover}
+.album div.cap{padding:9px 10px}
+.album b{display:block;font-size:13.5px}
+.album span{font-size:12px;color:var(--muted)}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.photos button{aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#EADBCB}
+.photos img{width:100%;height:100%;object-fit:cover}
+.lightbox{position:absolute;inset:0;z-index:65;background:rgba(30,8,12,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px;color:var(--cream)}
+.lightbox img{max-width:100%;max-height:75%;border-radius:10px}
+
+/* Drive */
+.folder{display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+.folder .ico{width:44px;height:44px;border-radius:12px;background:var(--gold-soft);display:grid;place-items:center;font-size:21px;flex-shrink:0}
+.file .ico{background:var(--navy-soft)}
+.sub{font-size:12.5px;color:var(--muted)}
+
+/* Polls */
+.poll h3{font-size:15.5px;line-height:1.4;margin:8px 0 12px}
+.opt{position:relative;display:block;width:100%;text-align:left;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:8px;overflow:hidden;font-size:14px;background:var(--card)}
+.opt .bar{position:absolute;inset:0 auto 0 0;background:var(--red-soft);z-index:0;transition:width .5s}
+.opt span{position:relative;z-index:1;display:flex;justify-content:space-between;gap:10px}
+.opt.mine{border-color:var(--red);font-weight:600}
+.opt:not([disabled]):active{transform:scale(.99)}
+
+/* Q&A */
+.q{display:flex;gap:12px}
+.vote{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:40px;border-radius:12px;padding:6px 0;background:var(--navy-soft);color:var(--red);font-weight:700;font-size:13px}
+.vote.on{background:var(--red);color:var(--cream)}
+.q .body{flex:1;font-size:14px;line-height:1.45;min-width:0}
+.q .body small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.answer{margin-top:8px;background:var(--green-soft);color:#24502C;border-radius:10px;padding:8px 10px;font-size:13px}
+
+/* Todo */
+.todo{display:flex;gap:12px;align-items:flex-start}
+.check{width:24px;height:24px;border-radius:8px;border:2px solid var(--gold);flex-shrink:0;display:grid;place-items:center;color:var(--cream);font-size:14px;margin-top:1px}
+.check.on{background:var(--green);border-color:var(--green)}
+.todo .txt{flex:1;font-size:14px;line-height:1.4;min-width:0}
+.todo .txt.done{text-decoration:line-through;color:var(--muted)}
+.todo .txt small{display:block;color:var(--muted);font-size:12px;margin-top:3px;text-decoration:none}
+.bde-banner{background:linear-gradient(135deg,var(--red),#5A1220);color:var(--cream);border-radius:18px;padding:16px;display:flex;gap:14px;align-items:center;margin-bottom:6px}
+.bde-banner b{font-family:"Libre Baskerville",serif;font-size:16px;display:block}
+.bde-banner span{font-size:12.5px;opacity:.85}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.actions button{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:var(--red);display:flex;gap:8px;align-items:center}
+
+/* Chat */
+.chat{position:absolute;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.chat.open{transform:none}
+.messages{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.daysep{align-self:center;font-size:11px;color:var(--muted);background:var(--card);border:1px solid var(--line);padding:3px 10px;border-radius:999px;margin:10px 0}
+.msg{max-width:80%;padding:9px 12px;border-radius:16px;font-size:14.5px;line-height:1.4;background:var(--card);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:5px;word-wrap:break-word;animation:fade .25s both}
+.msg .who{font-size:12px;font-weight:700;color:var(--red);margin-bottom:2px}
+.msg time{display:block;font-size:10.5px;color:var(--muted);text-align:right;margin-top:3px}
+.msg.me{align-self:flex-end;background:var(--red);color:var(--cream);border:none;border-bottom-left-radius:16px;border-bottom-right-radius:5px}
+.msg.me time{color:rgba(246,234,223,.75)}
+.composer{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+.composer input{flex:1;border:1.5px solid var(--line);border-radius:999px;padding:11px 16px;outline:none;font-size:15px;background:var(--bg);min-width:0}
+.send{width:44px;height:44px;border-radius:50%;background:var(--red);color:var(--cream);display:grid;place-items:center;flex-shrink:0}
+.send svg{width:20px;height:20px}
+
+/* Profile */
+.profile-head{text-align:center;padding:10px 0 18px}
+.profile-head .avatar{width:84px;height:84px;font-size:28px;margin:0 auto 12px;border:4px solid var(--card);box-shadow:0 4px 14px rgba(90,18,32,.2)}
+.profile-head h3{font-family:"Libre Baskerville",serif;font-size:20px;color:var(--red)}
+.profile-head p{color:var(--muted);font-size:14px;margin-top:4px}
+.kv{font-size:14px;line-height:1.7}
+.kv b{color:var(--muted);font-weight:500;font-size:12.5px;display:block;margin-top:8px;line-height:1.3}
+
+/* Sheet / fab / toast */
+.overlay{position:absolute;inset:0;background:rgba(40,10,16,.45);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;background:var(--card);border-radius:22px 22px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:90%;overflow-y:auto}
+.sheet.show{transform:none}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet h3{font-family:"Libre Baskerville",serif;color:var(--red);margin-bottom:14px;font-size:18px}
+.sheet form{display:flex;flex-direction:column;gap:12px}
+.fab{position:absolute;right:18px;bottom:84px;height:52px;padding:0 20px 0 16px;border-radius:26px;background:var(--red);color:var(--cream);display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;box-shadow:0 8px 20px rgba(123,30,46,.4);z-index:10}
+.fab svg{width:22px;height:22px}
+.toast{position:absolute;left:50%;top:80px;transform:translate(-50%,-20px);background:var(--red);color:var(--cream);padding:10px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.3s;z-index:80;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <section class="splash" id="splash">
+    <img src="logo-bordeaux.png" alt="Logo du Magistère Droit des Affaires, Fiscalité et Comptabilité – Aix-en-Provence">
+    <h1>MDAFC</h1>
+    <p>Magistère Droit des Affaires, Fiscalité &amp; Comptabilité · Aix-en-Provence</p>
+    <div id="splashAction"></div>
+    <div class="stripe"></div>
+  </section>
+
+  <header id="header"></header>
+  <main id="main"></main>
+  <button class="fab" id="fab" hidden></button>
+  <nav class="tabs" id="tabs"></nav>
+
+  <section class="chat" id="chat">
+    <header id="chatHeader"></header>
+    <div class="messages" id="messages"></div>
+    <form class="composer" id="composer">
+      <input id="msgInput" placeholder="Écrire un message…" autocomplete="off">
+      <button class="send" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+    </form>
+  </section>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="lightbox" id="lightbox" hidden></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="backend.js"></script>
+<script>
+/* =====================================================================
+   MDAFC – prototype
+   Toutes les données sont pour l'instant enregistrées dans le navigateur.
+   Elles sont rangées en deux familles, prêtes à être branchées sur une
+   base de données partagée :
+     • PUBLIC (tous les étudiants) : events, reminders, polls, boards,
+       offers, products, albums, files, subjects, pairs, channels publics
+     • BDE (les 7 membres)        : todos, bdeDrive, salon « Bureau BDE »
+   ===================================================================== */
+
+/* ================= Icônes ================= */
+const sv=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I={
+  home:sv('<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
+  cal:sv('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>'),
+  ticket:sv('<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M13 6v12" stroke-dasharray="2 2"/>'),
+  drive:sv('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+  chat:sv('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>'),
+  back:sv('<path d="M15 18l-6-6 6-6"/>'),
+  next:sv('<path d="M9 18l6-6-6-6"/>'),
+  plus:sv('<path d="M12 5v14M5 12h14"/>'),
+  search:sv('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  bell:sv('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
+  ext:sv('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+  up:sv('<path d="M6 15l6-6 6 6"/>'),
+};
+const small=(ic,s=16,st='')=>ic.replace('<svg',`<svg width="${s}" height="${s}" style="${st}"`);
+
+/* ================= Configuration ================= */
+const PROMOS=['Mag 1','Mag 2','Mag 3'];
+const BDE_MEMBERS=[
+  {id:'b1',name:'Clémence Aillaud',role:'Présidente'},
+  {id:'b2',name:'Feyrielle Chelouah',role:'Secrétaire générale'},
+  {id:'b3',name:'Valentine Chabaud',role:'Trésorière'},
+  {id:'b4',name:'Lou Bianchi',role:'Chargé(e) de communication'},
+  {id:'b5',name:'Anaë Camus',role:'Coordinatrice événementiel'},
+  {id:'b6',name:'Jean-Baptiste Veit-Harter',role:'Coordinateur événementiel'},
+  {id:'b7',name:'Maël Le Tallec',role:'Coordinateur événementiel'}
+];
+// Mot de passe BDE de démonstration : « BDE2026 » (modifiable dans l'Espace BDE)
+const DEFAULT_BDE_HASH='4cf85827ca12b8491cf5f5c04b241d647e21a48596c5a006ffb42ef50f05eb4d';
+const CATS={
+  bde:{label:'Soirées & BDE',color:'#7B1E2E'},
+  voyage:{label:'Voyages & week-ends',color:'#9A6B2E'},
+  scol:{label:'Scolarité',color:'#C9A46A'},
+  pro:{label:'Carrière & CRFPA',color:'#4F6D7A'},
+  sport:{label:'Sport',color:'#5E8C61'},
+  deadline:{label:'Échéance',color:'#B5545F'}
+};
+const F='Fac',M='Magistère';
+const SUBJECTS_S1={
+  'Mag 1':[
+    {n:'Droit du travail',t:F,d:'CM'},{n:'Droit de l\'Union européenne : le marché',t:F,d:'CM'},{n:'Droit commercial',t:F,d:'CM + TD'},
+    {n:'Droit civil : les biens',t:F,d:'CM + TD'},{n:'Droit judiciaire privé',t:F,d:'CM'},
+    {n:'Comptabilité',t:M,d:'UE 8 · CM'},{n:'Procédure administrative contentieuse',t:M,d:'UE 6 · CM'},{n:'Procédure fiscale non contentieuse',t:M,d:'UE 9 · CM'},
+    {n:'Droit civil approfondi',t:M,d:'UE 7 · CM'},{n:'Anglais',t:M,d:'TD'},{n:'Anglais juridique',t:M,d:'TD'}],
+  'Mag 2':[
+    {n:'Droit de la concurrence',t:F,d:'CM'},{n:'Droit de la consommation',t:F,d:'CM'},{n:'Droit spécial des sociétés',t:F,d:'CM + TD'},
+    {n:'Droit fiscal des affaires I',t:F,d:'CM + TD'},{n:'Droit international privé',t:F,d:'CM'},{n:'Droit patrimonial de la famille',t:F,d:'CM'},
+    {n:'Fiscalité personnelle approfondie',t:M,d:''},{n:'Introduction au droit chinois et à la fiscalité chinoise',t:M,d:''},
+    {n:'The Sources of Law in Great Britain',t:M,d:'Anglais'},{n:'Procédures civiles d\'exécution',t:M,d:''},{n:'Comptabilité',t:M,d:''}],
+  'Mag 3':[
+    {n:'Fiscalité approfondie des sociétés',t:F,d:'O. Negrin / M. Figuière'},{n:'Technique de rédaction de contrats',t:F,d:'J.-M. Marmayou'},
+    {n:'La procédure de contrôle',t:F,d:'M. Fredy'},{n:'La fiscalité du numérique',t:F,d:'A. Roustan'},{n:'Groupes de sociétés',t:F,d:'B. Brignon'},
+    {n:'Les assemblées générales',t:F,d:'P. Scotto di Carlo'},{n:'Le prompt engineering appliqué au droit',t:F,d:'N. Vergnet'},
+    {n:'Les cessions de titres',t:F,d:'P. Scotto di Carlo'},{n:'La fiscalité des groupes de sociétés',t:F,d:'A.-C. Revillard'},
+    {n:'Dossier de rectification',t:F,d:'M. Fredy'},{n:'Les enjeux en droit fiscal',t:F,d:'L. Roustouil'},
+    {n:'Fiscalité des LBO',t:F,d:'O. El Arjouni'},{n:'Les baux commerciaux',t:F,d:'P. Scotto di Carlo'},
+    {n:'Opérations sur fonds de commerce',t:F,d:'P. Scotto di Carlo'},{n:'L\'actualité de la doctrine administrative',t:F,d:'L. Beltrando'},
+    {n:'Business Law Contracts and Tort',t:M,d:'F. Falzon'},{n:'Analyse financière',t:M,d:'A. Chauchard-Tillié'}]
+};
+const PARRAINS=['Adèle Dauriac','Alizée Lugowski','Anaë Camus','Augustin Le Carour','Baptistine Catta','Camille Piazza','Charlotte Fontaine','Chiara Audibert','Clémence Aillaud','Clément Chapus','Émeraude Etoundi','Emma Buston','Erine Bigel','Eva Juan','Feyrielle Chelouah','Jean-Baptiste Veit-Harter','Kaena Daphne-Hediger','Lise Hakikian','Lola Manenti','Lou Bianchi','Maël Le Tallec','Noélie Boquillod','Sacha Méjean','Sterenn Brun','Tom Dauvergne','Valentine Chabaud','Zoé Laine'];
+
+/* ================= Données de départ ================= */
+const T0=Date.now(),H=3600e3,D=24*H;
+function placeholderPhoto(title,sub,hue){
+  const c=['#7B1E2E','#9A3445','#5A1220','#A8805A'][hue%4];
+  const heads=[...Array(9)].map((_,i)=>`<circle cx="${60+i*35}" cy="${i%2?150:135}" r="14" fill="${c}" opacity=".55"/><rect x="${44+i*35}" y="${i%2?166:151}" width="32" height="60" rx="14" fill="${c}" opacity=".45"/>`).join('');
+  const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#F3E4D6"/><rect y="200" width="400" height="100" fill="#EAD5C2"/>${heads}<text x="200" y="60" text-anchor="middle" font-family="Georgia" font-size="22" font-weight="bold" fill="${c}">${title}</text><text x="200" y="86" text-anchor="middle" font-family="Arial" font-size="14" fill="#8A6F68">${sub}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+}
+const SEED={
+  me:null, bdeHash:DEFAULT_BDE_HASH, semester:'S1',
+  subjects:{'Mag 1':{S1:SUBJECTS_S1['Mag 1'],S2:[]},'Mag 2':{S1:SUBJECTS_S1['Mag 2'],S2:[]},'Mag 3':{S1:SUBJECTS_S1['Mag 3'],S2:[]}},
+  channels:[
+    {id:'c1',name:'Général',emoji:'🏛️',color:'#5A1220',desc:'Mag 1 · Mag 2 · Mag 3',msgs:[{from:'sys',text:'Bienvenue sur MDAFC ! Toutes les infos du Magistère passent désormais ici 🎉',t:T0-2*H}]},
+    {id:'c2',name:'Mag 1',emoji:'1️⃣',color:'#7B1E2E',desc:'Promo Mag 1',promo:'Mag 1',msgs:[]},
+    {id:'c3',name:'Mag 2',emoji:'2️⃣',color:'#7B1E2E',desc:'Promo Mag 2',promo:'Mag 2',msgs:[]},
+    {id:'c4',name:'Mag 3',emoji:'3️⃣',color:'#7B1E2E',desc:'Promo Mag 3',promo:'Mag 3',msgs:[]},
+    {id:'c5',name:'Stages & CRFPA',emoji:'💼',color:'#5A1220',desc:'Offres, conseils, prépa',msgs:[]},
+    {id:'cb',name:'Bureau du BDE',emoji:'🔒',color:'#C9A46A',desc:'Réservé aux 7 membres',bde:true,msgs:[{from:'sys',text:'Salon privé du bureau : seuls les membres du BDE le voient.',t:T0-2*H}]}
+  ],
+  read:{},
+  events:[
+    {id:'e1',title:'Soirée à l\'Estello',date:'2026-11-19',time:'21:00',place:'L\'Estello',cat:'bde',promos:PROMOS,desc:'Soirée du Magistère. Horaire à confirmer par le BDE.',booking:{places:120,price:0,link:'',going:[]}},
+    {id:'e2',title:'Réunion CRFPA',date:'2026-12-03',time:'19:00',place:'À préciser',cat:'pro',promos:['Mag 2','Mag 3'],desc:'Présentation de la préparation au CRFPA. Posez vos questions à l\'avance dans la boîte à questions !',board:'q1'},
+    {id:'e3',title:'Magistérium',date:'2027-02-12',end:'2027-02-14',time:'',place:'À préciser',cat:'bde',promos:PROMOS,desc:''},
+    {id:'e4',title:'Voyage à Londres',date:'2027-02-21',end:'2027-02-27',time:'',place:'Londres',cat:'voyage',promos:['Mag 2'],desc:''},
+    {id:'e5',title:'Juris\'Cup ski',date:'2027-03-12',end:'2027-03-14',time:'',place:'À préciser',cat:'sport',promos:PROMOS,desc:'Le BDE complétera les informations (lieu, transport, tarifs).'}
+  ],
+  reminders:[
+    {id:'r1',text:'N\'oubliez pas de payer la Juriscup : vous avez jusqu\'au 5 février !',deadline:'2027-02-05',link:'',author:'b3'}
+  ],
+  remOn:{}, notified:{},
+  polls:[
+    {id:'po1',question:'Juriski : mon niveau en ski ?',options:[{text:'Compétition',votes:[]},{text:'Je me débrouille bien',votes:[]},{text:'Je tiens debout sur les skis quoi',votes:[]},{text:'Je préfère marcher',votes:[]}],author:'b5',t:T0-H,closed:false}
+  ],
+  boards:[
+    {id:'q1',title:'Réunion CRFPA – vos questions',event:'e2',desc:'Posez vos questions à l\'avance : elles seront transmises aux intervenants.',questions:[],author:'b4',t:T0-H}
+  ],
+  offers:[],
+  pairs:[],
+  products:[
+    {id:'s1',name:'Pull de promo 2026-2027',status:'Précommande',price:null,deadline:'',desc:'Sweat à capuche bordeaux. Dessin de la promo brodé sur le cœur, badge du Magistère en crème dans le dos.',sizes:['XS','S','M','L','XL'],imgs:['img/pull-dos.png','img/pull-face.png'],link:''},
+    {id:'s2',name:'Briquet MDAFC',status:'En préparation',price:null,deadline:'',desc:'Briquet bordeaux. Recto « MDAFC », verso « in God we trust, in tax we trust more ».',sizes:[],imgs:['img/briquet.png','img/briquet-1.png','img/briquet-2.png'],link:''}
+  ],
+  albums:[
+    {id:'al1',promo:'Mag 1',year:'2026-2027',title:'Photo de classe',photos:[{src:placeholderPhoto('Mag 1','Photo de classe 2026-2027',0)}]},
+    {id:'al2',promo:'Mag 2',year:'2026-2027',title:'Photo de classe',photos:[{src:placeholderPhoto('Mag 2','Photo de classe 2026-2027',1)}]},
+    {id:'al3',promo:'Mag 3',year:'2026-2027',title:'Photo de classe',photos:[{src:placeholderPhoto('Mag 3','Photo de classe 2026-2027',2)}]}
+  ],
+  files:[],
+  // ---- BDE uniquement ----
+  todos:[
+    {id:'t1',text:'Créer les liens HelloAsso (pull, briquet, billetterie)',who:'b3',due:'2026-11-25',done:false,by:'b4',t:T0-H},
+    {id:'t2',text:'Compléter le calendrier de l\'année dans l\'application',who:'',due:'',done:false,by:'b4',t:T0-H}
+  ],
+  bdeDrive:'https://drive.google.com/drive/u/2/home'
+};
+
+/* ================= État ================= */
+// En simulation, chaque onglet joue un téléphone différent : il garde son propre cache
+const KEY='mdafc-v4'+(Backend.mode==='mock'?'-'+(sessionStorage.getItem('mdafc-tab')||(sessionStorage.setItem('mdafc-tab',Math.random().toString(36).slice(2)),sessionStorage.getItem('mdafc-tab'))):'');
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||structuredClone(SEED);}catch(e){S=structuredClone(SEED);}
+S.uid=S.uid||'me'; S.profiles=S.profiles||{};
+function localSave(){try{localStorage.setItem(KEY,JSON.stringify(S));return true;}catch(e){return false;}}
+// Enregistre sur l'appareil + envoie les changements à la base partagée
+function save(){Backend.schedulePush();if(localSave()||Backend.mode!=='local')return true;toast('Mémoire du navigateur pleine : fichier trop lourd pour la démo');return false;}
+
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const bdeMember=id=>BDE_MEMBERS.find(m=>m.id===id);
+function person(id){
+  if(id==='me'||id===S.uid)return S.me;
+  if(S.profiles[id])return {name:S.profiles[id].name,promo:S.profiles[id].promo};
+  if(id==='sys')return {name:'MDAFC',promo:''};
+  const b=bdeMember(id); if(b)return {...b,promo:'BDE'};
+  return {name:'Étudiant(e)',promo:''};
+}
+const myId=()=>S.me?.bde||S.uid;           // un membre du BDE publie sous son nom
+const isMine=id=>id===S.uid||id==='me'||(S.me?.bde&&id===S.me.bde);
+const initials=n=>n.split(/[\s-]+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const COLORS=['#7B1E2E','#5A1220','#9A3445','#A8805A','#6E2A33','#B5545F'];
+const colorOf=n=>COLORS[[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%COLORS.length];
+const avatar=(p,cls='')=>`<div class="avatar ${cls}" style="background:${colorOf(p.name)}">${esc(initials(p.name))}</div>`;
+const hm=t=>new Date(t).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+const dt=s=>new Date(s+'T12:00');
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const todayStr=()=>ymd(new Date());
+const daysLeft=s=>Math.round((dt(s)-dt(todayStr()))/D);
+const fmtDate=(s,o={weekday:'long',day:'numeric',month:'long'})=>dt(s).toLocaleDateString('fr-FR',o);
+const mon=s=>dt(s).toLocaleDateString('fr-FR',{month:'short'}).replace('.','');
+function ago(t){const d=Date.now()-t;if(d<60e3)return'à l\'instant';if(d<H)return Math.floor(d/60e3)+' min';if(d<D)return hm(t);if(d<2*D)return'hier';return new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
+const isBDE=()=>!!S.me?.bde;
+const unread=c=>c.msgs.filter(m=>!isMine(m.from)&&m.t>(S.read[c.id]||0)).length;
+const myChannels=()=>S.channels.filter(c=>c.bde?isBDE():true);
+const forMe=e=>!e.promos||e.promos.includes(S.me.promo)||isBDE();
+const evEnd=e=>e.end||e.date;
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+const eur=n=>n==null||n===''?'Prix à venir':(+n).toLocaleString('fr-FR')+' €';
+
+/* ================= Écran d'accueil ================= */
+function splash(){
+  const a=$('#splashAction');
+  if(Backend.mode!=='local'&&!Backend.member&&!Backend.joined)return codeGate();
+  if(S.me){a.innerHTML=`<button class="btn" id="enter">Entrer</button>`;$('#enter').onclick=hideSplash;return;}
+  a.innerHTML=`<button class="btn" id="start">Rejoindre la communauté</button>`;
+  $('#start').onclick=()=>{
+    $('#splash p').style.display='none';
+    a.innerHTML=`<form class="onboard" id="ob">
+      <label class="field">Prénom et nom<input name="name" required placeholder="Ex. Jeanne Dupont" autocomplete="name"></label>
+      <label class="field">Promotion<select name="promo">${PROMOS.map(p=>`<option>${p}</option>`).join('')}</select></label>
+      <button class="btn block">C'est parti</button></form>`;
+    $('#ob').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);
+      S.me={id:S.uid,name:Backend.member?bdeMember(Backend.member).name:f.get('name').trim(),promo:f.get('promo'),interests:'',bde:Backend.member||null};save();Backend.saveProfile(S.me);hideSplash();toast('Bienvenue '+S.me.name.split(' ')[0]+' !');};
+  };
+}
+// Accès réservé aux étudiants : code de promo donné par le BDE
+function codeGate(){
+  const a=$('#splashAction');
+  a.innerHTML=`<button class="btn" id="start">Rejoindre la communauté</button>`;
+  $('#start').onclick=()=>{
+    $('#splash p').style.display='none';
+    a.innerHTML=`<form class="onboard" id="ob">
+      <label class="field">Prénom et nom<input name="name" required placeholder="Ex. Jeanne Dupont" autocomplete="name" value="${esc(S.me?.name||'')}"></label>
+      <label class="field">Code de votre promo<input name="code" required placeholder="Ex. MAG2-XXXXX" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.06em"></label>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.45;text-align:center;margin:-2px 4px 2px">Réservé aux étudiants du Magistère (Mag 1, 2, 3). Le code vous est donné par le BDE.</p>
+      <button class="btn block">C'est parti</button>
+      <button type="button" class="btn ghost block small" id="bdeLogin">Je suis membre du BDE</button></form>`;
+    $('#ob').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),btn=e.target.querySelector('.btn');btn.disabled=true;
+      try{const promo=await Backend.joinPromo(f.get('code'));
+        S.me={...(S.me||{interests:''}),id:S.uid,name:f.get('name').trim(),promo,bde:null};save();Backend.saveProfile(S.me);hideSplash();toast('Bienvenue en '+promo+', '+S.me.name.split(' ')[0]+' !');}
+      catch(err){btn.disabled=false;toast(err.message);}};
+    $('#bdeLogin').onclick=()=>{
+      a.innerHTML=`<form class="onboard" id="obB">
+        <label class="field">E-mail du BDE<input name="email" type="email" required autocomplete="username"></label>
+        <label class="field">Mot de passe<input name="pw" type="password" required minlength="8" autocomplete="current-password"></label>
+        <button class="btn block">Se connecter</button>
+        <p style="font-size:12.5px;color:var(--muted);line-height:1.45;text-align:center">Première connexion ? Entrez d'abord avec le code de votre promo, puis créez votre compte dans Profil → Connexion BDE.</p>
+        <button type="button" class="btn ghost block small" id="back">Retour</button></form>`;
+      $('#back').onclick=()=>{codeGate();$('#start').click();};
+      $('#obB').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),btn=e.target.querySelector('.btn');btn.disabled=true;
+        try{const mem=await Backend.loginBDE(f.get('email'),f.get('pw'),false);const m=bdeMember(mem);
+          S.uid=Backend.uid;S.me={...(S.me||{interests:'',promo:PROMOS[0]}),id:S.uid,name:m.name,bde:mem};save();Backend.saveProfile(S.me);hideSplash();toast('Bienvenue, '+m.name.split(' ')[0]+' !');}
+        catch(err){btn.disabled=false;toast(err.message);}};};
+  };
+}
+let entered=false;
+function hideSplash(){entered=true;const s=$('#splash');s.classList.add('hide');go('home');setTimeout(()=>s.style.display='none',550);checkReminders();}
+
+/* ================= Navigation ================= */
+const TABS=[['home','Accueil',I.home],['agenda','Agenda',I.cal],['billetterie','Billetterie',I.ticket],['drive','Drive',I.drive],['messages','Messages',I.chat]];
+const PAGES={
+  home:['Accueil','Magistère DAFC · Aix-en-Provence'],
+  agenda:['Agenda','Calendrier commun Mag 1 · 2 · 3'],
+  billetterie:['Billetterie','Réservez vos places'],
+  drive:['Drive','Cours & annales'],
+  messages:['Messages','Échangez entre promos'],
+  photos:['Photos de classe','Souvenirs des promos'],
+  boutique:['Pulls & merch','Commandes via HelloAsso'],
+  annuaire:['Annuaire','Étudiants & réseau des anciens'],
+  sondages:['Sondages','Donnez votre avis au BDE'],
+  questions:['Questions','Posez vos questions à l\'avance'],
+  stages:['Stages & alternances','Offres partagées par la communauté'],
+  parrainage:['Parrainage','Parrains, marraines & filleuls'],
+  bde:['Espace BDE','Réservé aux 7 membres du bureau'],
+  profil:['Mon profil',''],
+};
+let page='home', parent='home', ui={};
+function go(p,state={}){ if(p==='bde'&&!isBDE()){toast('Espace réservé au BDE');p='profil';} if(TABS.some(t=>t[0]===p)) parent=p; page=p; ui=state; render(); $('#main').scrollTop=0; }
+function render(){
+  const total=myChannels().reduce((a,c)=>a+unread(c),0);
+  $('#tabs').innerHTML=TABS.map(([k,l,ic])=>`<button class="${k===parent?'active':''}" data-tab="${k}">${ic}${l}${k==='messages'&&total?`<span class="dot">${total}</span>`:''}</button>`).join('');
+  $$('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+  const isTab=TABS.some(t=>t[0]===page);
+  let [title,sub]=PAGES[page]; if(page==='profil')sub=S.me.promo+(isBDE()?' · Membre du BDE':'');
+  if(page==='drive'&&ui.promo){title=ui.subject||ui.promo;sub=ui.subject?ui.promo+' · '+(ui.sem||S.semester):'Choisissez une matière';}
+  if(page==='photos'&&ui.album){const a=S.albums.find(x=>x.id===ui.album);title=a.title;sub=(a.promo==='Tous'?'Toutes promos':a.promo)+' · '+a.year;}
+  if(page==='questions'&&ui.board){const b=S.boards.find(x=>x.id===ui.board);title=b.title;sub=b.questions.length+' question'+(b.questions.length>1?'s':'');}
+  const deep=(page==='drive'&&ui.promo)||(page==='photos'&&ui.album)||(page==='questions'&&ui.board);
+  const showBack=!isTab||deep;
+  $('#header').innerHTML=`${showBack?`<button class="icon-btn" id="hback" aria-label="Retour">${I.back}</button>`:`<div class="badge"><img src="logo-bordeaux.png" alt=""></div>`}
+    <h2>${esc(title)}<small>${esc(sub)}</small></h2>
+    <button class="me-btn" id="hme" aria-label="Mon profil">${esc(initials(S.me.name))}${isBDE()?'<span class="crown">BDE</span>':''}</button>`;
+  $('#hme').onclick=()=>go('profil');
+  if(showBack) $('#hback').onclick=()=>{
+    if(page==='drive'&&ui.subject) go('drive',{promo:ui.promo,sem:ui.sem});
+    else if(page==='drive'&&ui.promo) go('drive');
+    else if(deep) go(page);
+    else go(parent);
+  };
+  const fab=$('#fab'); fab.hidden=true; fab.onclick=null;
+  ({home:vHome,agenda:vAgenda,billetterie:vBilletterie,drive:vDrive,messages:vMessages,photos:vPhotos,boutique:vBoutique,annuaire:vAnnuaire,sondages:vSondages,questions:vQuestions,stages:vStages,parrainage:vParrainage,bde:vBDE,profil:vProfil})[page]();
+}
+function setFab(label,fn){const f=$('#fab');f.hidden=false;f.innerHTML=I.plus+esc(label);f.onclick=fn;}
+const bindGo=()=>$$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go,b.dataset.state?JSON.parse(b.dataset.state):{}));
+
+/* ================= Rappels & notifications ================= */
+function reminderCard(r){
+  const n=daysLeft(r.deadline), on=!!S.remOn[r.id];
+  return `<div class="card reminder"><div class="count"><b>${n<0?'–':n===0?'J':n}</b><span>${n<0?'passé':n===0?'auj.':n>1?'jours':'jour'}</span></div>
+    <div class="txt">${esc(r.text)}<small>Échéance : ${fmtDate(r.deadline,{day:'numeric',month:'long',year:'numeric'})}${r.link?` · <a class="link" href="${esc(r.link)}" target="_blank" rel="noopener">Payer / s'inscrire</a>`:''}${isBDE()?` · <button class="del" data-delrem="${r.id}">supprimer</button>`:''}</small></div>
+    <button class="bell ${on?'on':''}" data-bell="${r.id}" aria-label="${on?'Désactiver':'Activer'} le rappel">${I.bell}</button></div>`;
+}
+function bindReminders(){
+  $$('[data-bell]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.bell;
+    if(S.remOn[id]){delete S.remOn[id];save();render();toast('Rappel désactivé');return;}
+    S.remOn[id]=true;save();render();
+    let perm='unsupported';
+    if('Notification' in window){try{perm=Notification.permission==='default'?await Notification.requestPermission():Notification.permission;}catch(e){}}
+    if(perm==='granted'){notify('Rappel activé',S.reminders.find(r=>r.id===id).text);toast('Rappel activé : vous serez notifié(e)');}
+    else toast('Rappel activé (notifications bloquées sur cet appareil)');
+  });
+  $$('[data-delrem]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer ce rappel pour tout le monde ?'))return;S.reminders=S.reminders.filter(r=>r.id!==b.dataset.delrem);save();render();});
+}
+function notify(title,body){try{if('Notification' in window&&Notification.permission==='granted')new Notification(title,{body,icon:'logo-bordeaux.png'});}catch(e){}}
+function checkReminders(){
+  S.reminders.forEach(r=>{
+    if(!S.remOn[r.id])return; const n=daysLeft(r.deadline);
+    if([7,3,1,0].includes(n)&&!S.notified[r.id+':'+n]){notify(n===0?'C\'est aujourd\'hui !':'Plus que '+n+' jour'+(n>1?'s':''),r.text);S.notified[r.id+':'+n]=1;save();}
+  });
+}
+function newReminder(){
+  openSheet(`<h3>Nouveau rappel</h3><form id="f">
+    <label class="field">Message<textarea name="text" rows="3" required placeholder="N'oubliez pas de payer la Juriscup : vous avez jusqu'au 5 février !"></textarea></label>
+    <label class="field">Date limite<input type="date" name="deadline" required></label>
+    <label class="field">Lien (HelloAsso, formulaire…) – facultatif<input type="url" name="link" placeholder="https://www.helloasso.com/…"></label>
+    <button class="btn block">Publier le rappel</button></form>`);
+  $('#f').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);
+    S.reminders.push({id:uid('r'),text:f.get('text').trim(),deadline:f.get('deadline'),link:f.get('link').trim(),author:myId()});save();closeSheet();render();toast('Rappel publié pour les trois promos');};
+}
+
+/* ================= Accueil ================= */
+/* ---------- Installation sur l'écran d'accueil ---------- */
+let installEvt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(entered&&S.me)render();});
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+function installCard(){
+  let off=false;try{off=localStorage.getItem('mdafc-install-off')==='1';}catch(e){}
+  if(isStandalone()||off)return '';
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const how=installEvt?`<button class="btn small" id="doInstall">Installer l'application</button>`
+    :ios?`Dans <b>Safari</b>, touchez <b>Partager</b> <span style="font-size:15px">⎋</span> (le carré avec une flèche), puis <b>« Sur l'écran d'accueil »</b>.`
+    :`Dans <b>Chrome</b>, touchez le menu <b>⋮</b>, puis <b>« Installer l'application »</b> (ou « Ajouter à l'écran d'accueil »).`;
+  return `<div class="card" id="installCard" style="display:flex;gap:12px;align-items:flex-start;border:1px solid var(--gold)">
+    <img src="apple-icon.png" alt="" style="width:46px;height:46px;border-radius:12px;flex:none">
+    <div style="flex:1;font-size:13.5px;line-height:1.5"><b>Installez MDAFC sur votre téléphone</b><br>${how}</div>
+    <button id="installOff" aria-label="Masquer" style="font-size:18px;color:var(--muted);padding:0 4px">×</button></div>`;
+}
+function bindInstall(){
+  if($('#installOff'))$('#installOff').onclick=()=>{try{localStorage.setItem('mdafc-install-off','1');}catch(e){}$('#installCard').remove();};
+  if($('#doInstall'))$('#doInstall').onclick=async()=>{installEvt.prompt();await installEvt.userChoice;installEvt=null;render();};
+}
+function vHome(){
+  const rem=S.reminders.filter(r=>daysLeft(r.deadline)>=0).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,2);
+  const next=S.events.filter(e=>forMe(e)&&evEnd(e)>=todayStr()).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+  const openPolls=S.polls.filter(p=>!p.closed&&!p.options.some(o=>o.votes.includes(myId()))).length;
+  const todoN=S.todos.filter(t=>!t.done).length;
+  const h=new Date().getHours();
+  $('#main').innerHTML=`<div class="hello"><h3>${h<18?'Bonjour':'Bonsoir'} ${esc(S.me.name.split(' ')[0])} !</h3><p>${esc(S.me.promo)} · Magistère Droit des Affaires, Fiscalité &amp; Comptabilité</p></div>
+    ${installCard()}
+    <div class="section-title">Rappels du BDE <button data-go="agenda">Tout voir</button></div>
+    <div class="list">${rem.map(reminderCard).join('')||'<div class="empty">Aucun rappel en cours.</div>'}</div>
+    <div class="section-title">Raccourcis</div>
+    <div class="tiles">
+      ${isBDE()?`<button class="tile bde" data-go="bde"><span class="ico">🔐</span>Espace BDE${todoN?`<span class="pill" style="background:var(--gold);color:#3A220C">${todoN}</span>`:''}</button>`:''}
+      <button class="tile" data-go="sondages"><span class="ico">📊</span>Sondages${openPolls?`<span class="pill">${openPolls}</span>`:''}</button>
+      <button class="tile" data-go="questions"><span class="ico">🙋</span>Questions</button>
+      <button class="tile" data-go="boutique"><span class="ico">🧥</span>Pulls &amp; merch</button>
+      <button class="tile" data-go="photos"><span class="ico">📸</span>Photos de classe</button>
+      <button class="tile" data-go="stages"><span class="ico">💼</span>Stages &amp; alternances</button>
+      <button class="tile" data-go="annuaire" data-state='{"seg":"anciens"}'><span class="ico">🎓</span>Réseau des anciens</button>
+      <button class="tile" data-go="parrainage"><span class="ico">🤝</span>Parrainage</button>
+      <button class="tile" data-go="annuaire"><span class="ico">👥</span>Annuaire</button>
+    </div>
+    <div class="section-title">Prochainement <button data-go="agenda">Calendrier</button></div>
+    <div class="list">${next.map(eventRow).join('')||'<div class="empty">Aucun événement à venir.</div>'}</div>`;
+  bindReminders(); bindGo(); bindEventRows(); bindInstall();
+}
+
+/* ================= Agenda ================= */
+function dateBox(e){
+  if(e.end&&e.end!==e.date){const a=dt(e.date),b=dt(e.end);
+    return `<div class="date"><div class="m">${mon(e.date)}${a.getMonth()!==b.getMonth()?'–'+mon(e.end):''}</div><div class="d range">${a.getDate()}–${b.getDate()}</div></div>`;}
+  return `<div class="date"><div class="m">${mon(e.date)}</div><div class="d">${dt(e.date).getDate()}</div></div>`;
+}
+function whenText(e){
+  if(e.end&&e.end!==e.date)return `Du ${fmtDate(e.date,{day:'numeric',month:'long'})} au ${fmtDate(e.end,{day:'numeric',month:'long'})}`;
+  return fmtDate(e.date,{weekday:'long'})+(e.time?' · '+e.time.replace(':','h'):'');
+}
+function eventRow(e){
+  const c=CATS[e.cat]||CATS.bde;
+  return `<button class="card event" data-ev="${e.id}">${dateBox(e)}
+    <div style="flex:1;min-width:0"><h3>${esc(e.title)}</h3><div class="info">${whenText(e)} · ${esc(e.place)}</div>
+    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag" style="background:${c.color}22;color:${c.color}">${c.label}</span>${e.promos.length<3?`<span class="tag gold">${esc(e.promos.join(' · '))}</span>`:''}${e.booking?'<span class="tag green">🎟️ Réservation</span>':''}${e.board?'<span class="tag">🙋 Questions</span>':''}</div></div></button>`;
+}
+function bindEventRows(){ $$('[data-ev]').forEach(b=>b.onclick=()=>showEvent(b.dataset.ev)); }
+function vAgenda(){
+  const mode=ui.mode||'mois', now=new Date();
+  const cur=ui.month?dt(ui.month):new Date(now.getFullYear(),now.getMonth(),1);
+  const sel=ui.sel||todayStr();
+  const evs=S.events.filter(forMe);
+  const onDay=s=>evs.filter(e=>e.date<=s&&evEnd(e)>=s);
+  let html=`<div class="section-title">Rappels ${isBDE()?'<button id="addRem">+ Nouveau rappel</button>':''}</div>
+    <div class="list">${S.reminders.filter(r=>daysLeft(r.deadline)>=0).sort((a,b)=>a.deadline.localeCompare(b.deadline)).map(reminderCard).join('')||'<div class="empty">Aucun rappel.</div>'}</div>
+    <div class="section-title">Calendrier de l'année</div>
+    <div class="seg"><button data-mode="mois" class="${mode==='mois'?'on':''}">Mois</button><button data-mode="liste" class="${mode==='liste'?'on':''}">Toute l'année</button></div>`;
+  if(mode==='mois'){
+    const y=cur.getFullYear(),m=cur.getMonth(),first=(new Date(y,m,1).getDay()+6)%7;
+    const nDays=new Date(y,m+1,0).getDate(),cellsN=Math.ceil((first+nDays)/7)*7;
+    let cells='';
+    for(let i=0;i<cellsN;i++){const d=new Date(y,m,1-first+i),s=ymd(d),de=onDay(s);
+      cells+=`<button class="day ${d.getMonth()!==m?'out':''} ${s===todayStr()?'today':''} ${s===sel?'sel':''}" data-day="${s}">${d.getDate()}<span class="dots">${de.slice(0,3).map(e=>`<i style="background:${s===sel?'#F6EADF':(CATS[e.cat]||CATS.bde).color}"></i>`).join('')}</span></button>`;}
+    html+=`<div class="card"><div class="cal-head"><button class="icon-btn" id="prev" aria-label="Mois précédent">${I.back}</button><h3>${cur.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</h3><button class="icon-btn" id="nextm" aria-label="Mois suivant">${I.next}</button></div>
+      <div class="cal">${['L','M','M','J','V','S','D'].map(d=>`<div class="dow">${d}</div>`).join('')}${cells}</div>
+      <div class="legend">${Object.values(CATS).map(c=>`<span><i style="background:${c.color}"></i>${c.label}</span>`).join('')}</div></div>
+      <div class="section-title" style="text-transform:none;letter-spacing:0;font-size:13px">${fmtDate(sel)}</div>
+      <div class="list">${onDay(sel).map(eventRow).join('')||'<div class="empty" style="padding:14px">Rien de prévu ce jour-là.</div>'}</div>`;
+  } else {
+    const up=evs.filter(e=>evEnd(e)>=todayStr()).sort((a,b)=>a.date.localeCompare(b.date));
+    let lastM='';
+    html+=up.map(e=>{const mo=dt(e.date).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});const sep=mo!==lastM?`<div class="month-sep">${mo}</div>`:'';lastM=mo;return sep+`<div style="margin-bottom:10px">${eventRow(e)}</div>`;}).join('')||'<div class="empty">Aucun événement à venir.</div>';
+  }
+  $('#main').innerHTML=html;
+  bindReminders(); bindEventRows();
+  $$('[data-mode]').forEach(b=>b.onclick=()=>{ui.mode=b.dataset.mode;render();});
+  $$('[data-day]').forEach(b=>b.onclick=()=>{ui.sel=b.dataset.day;ui.month=b.dataset.day.slice(0,8)+'01';render();});
+  const shift=k=>{ui.month=ymd(new Date(cur.getFullYear(),cur.getMonth()+k,1));render();};
+  if($('#prev')){$('#prev').onclick=()=>shift(-1);$('#nextm').onclick=()=>shift(1);}
+  if($('#addRem'))$('#addRem').onclick=newReminder;
+  if(isBDE())setFab('Événement',()=>editEvent());
+}
+function showEvent(id){
+  const e=S.events.find(x=>x.id===id),c=CATS[e.cat]||CATS.bde;
+  openSheet(`<span class="tag" style="background:${c.color}22;color:${c.color}">${c.label}</span>
+    <h3 style="margin-top:10px">${esc(e.title)}</h3>
+    <div style="font-size:14px;line-height:1.7;color:var(--muted)">📅 ${e.end&&e.end!==e.date?whenText(e):fmtDate(e.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}${e.time?'<br>🕐 '+esc(e.time.replace(':','h')):''}<br>📍 ${esc(e.place)}<br>👥 ${e.promos.length===3?'Mag 1 · Mag 2 · Mag 3':esc(e.promos.join(' · '))}</div>
+    ${e.desc?`<p style="margin:12px 0;font-size:14px;line-height:1.5">${esc(e.desc)}</p>`:''}
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+      ${e.booking?`<button class="btn block" id="toBook">🎟️ Réserver ma place</button>`:''}
+      ${e.board?`<button class="btn gold block" id="toBoard">🙋 Poser une question</button>`:''}
+      <button class="btn ghost block" id="ics">Ajouter à mon calendrier</button>
+      ${isBDE()?`<button class="btn ghost block" id="edit">Modifier / compléter (BDE)</button><button class="del" id="delev" style="align-self:center">Supprimer l'événement</button>`:''}
+    </div>`);
+  if($('#toBook'))$('#toBook').onclick=()=>{closeSheet();go('billetterie',{focus:id});};
+  if($('#toBoard'))$('#toBoard').onclick=()=>{closeSheet();go('questions',{board:e.board});};
+  $('#ics').onclick=()=>downloadICS(e);
+  if($('#edit'))$('#edit').onclick=()=>editEvent(e);
+  if($('#delev'))$('#delev').onclick=()=>{if(!confirm('Supprimer « '+e.title+' » pour tout le monde ?'))return;S.events=S.events.filter(x=>x.id!==id);save();closeSheet();render();};
+}
+function downloadICS(e){
+  const d=e.date.replace(/-/g,''),stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  let start,end;
+  if(e.time&&!e.end){start='DTSTART:'+d+'T'+e.time.replace(':','')+'00';end='';}
+  else{const n=new Date(dt(evEnd(e)).getTime()+D);start='DTSTART;VALUE=DATE:'+d;end='DTEND;VALUE=DATE:'+ymd(n).replace(/-/g,'');}
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MDAFC//FR','BEGIN:VEVENT','UID:'+e.id+'@mdafc','DTSTAMP:'+stamp,start,end,'SUMMARY:'+e.title,'LOCATION:'+e.place,'DESCRIPTION:'+(e.desc||''),'END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download=e.title.replace(/[^\wÀ-ÿ -]/g,'')+'.ics';a.click();
+}
+function editEvent(e){
+  const b=e?.booking;
+  openSheet(`<h3>${e?'Modifier l\'événement':'Nouvel événement'}</h3><form id="f">
+    <label class="field">Titre<input name="title" required value="${esc(e?.title)}" placeholder="Réunion CRFPA"></label>
+    <div class="grid2"><label class="field">Date de début<input type="date" name="date" required value="${esc(e?.date)}"></label><label class="field">Date de fin (si plusieurs jours)<input type="date" name="end" value="${esc(e?.end)}"></label></div>
+    <div class="grid2"><label class="field">Heure (facultatif)<input type="time" name="time" value="${esc(e?.time)}"></label><label class="field">Lieu<input name="place" required value="${esc(e?.place)}"></label></div>
+    <label class="field">Catégorie<select name="cat">${Object.entries(CATS).map(([k,c])=>`<option value="${k}" ${e?.cat===k?'selected':''}>${c.label}</option>`).join('')}</select></label>
+    <div class="field">Promotions concernées<div class="checks">${PROMOS.map(p=>`<label><input type="checkbox" name="promos" value="${p}" ${!e||e.promos.includes(p)?'checked':''}>${p}</label>`).join('')}</div></div>
+    <label class="field">Description<textarea name="desc" rows="2">${esc(e?.desc)}</textarea></label>
+    <div class="checks"><label><input type="checkbox" name="hasBoard" ${e?.board?'checked':''}> Ouvrir une boîte à questions</label></div>
+    <div class="checks"><label><input type="checkbox" name="hasBooking" ${b?'checked':''}> Ouvrir la réservation de places</label></div>
+    <div class="grid2"><label class="field">Nombre de places<input type="number" name="places" min="1" value="${b?.places||50}"></label><label class="field">Prix (€, 0 = gratuit)<input type="number" name="price" min="0" step="0.5" value="${b?.price??0}"></label></div>
+    <label class="field">Lien de paiement HelloAsso<input type="url" name="link" value="${esc(b?.link)}" placeholder="https://www.helloasso.com/associations/…"></label>
+    <button class="btn block">${e?'Enregistrer':'Ajouter au calendrier'}</button></form>`);
+  $('#f').onsubmit=ev=>{ev.preventDefault();const f=new FormData(ev.target);
+    const promos=f.getAll('promos'); if(!promos.length){toast('Choisissez au moins une promo');return;}
+    const end=f.get('end'); if(end&&end<f.get('date')){toast('La date de fin est avant le début');return;}
+    const data={title:f.get('title').trim(),date:f.get('date'),end:end&&end!==f.get('date')?end:'',time:f.get('time'),place:f.get('place').trim(),cat:f.get('cat'),promos,desc:f.get('desc').trim()};
+    data.booking=f.get('hasBooking')?{places:+f.get('places'),price:+f.get('price'),link:f.get('link').trim(),going:b?.going||[]}:undefined;
+    const target=e||{id:uid('e')};
+    if(f.get('hasBoard')&&!target.board){const bid=uid('q');S.boards.push({id:bid,title:data.title+' – vos questions',event:target.id,desc:'Posez vos questions à l\'avance.',questions:[],author:myId(),t:Date.now()});data.board=bid;}
+    if(!f.get('hasBoard'))data.board=undefined;
+    if(e)Object.assign(e,data); else S.events.push({...target,...data});
+    save();closeSheet();render();toast(e?'Événement modifié':'Ajouté au calendrier commun');};
+}
+
+/* ================= Billetterie ================= */
+function vBilletterie(){
+  const evs=S.events.filter(e=>e.booking&&forMe(e)&&evEnd(e)>=todayStr()).sort((a,b)=>a.date.localeCompare(b.date));
+  const me=myId();
+  $('#main').innerHTML=`<div class="list">${evs.map(e=>{
+    const b=e.booking,mine=b.going.includes(me),left=b.places-b.going.length;
+    return `<div class="card ticket" id="t-${e.id}"><div class="top">${dateBox(e)}
+      <div style="flex:1"><h3 style="font-size:15.5px">${esc(e.title)}</h3><div style="font-size:13px;color:var(--muted);line-height:1.5">${whenText(e)} · ${esc(e.place)}</div>
+      <div class="gauge"><i style="width:${Math.min(100,b.going.length/b.places*100)}%"></i></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:5px">${left>0?left+' place'+(left>1?'s':'')+' restante'+(left>1?'s':''):'Complet'} sur ${b.places}${isBDE()?` · <button class="link" data-list="${e.id}">${b.going.length} inscrit(s)</button>`:''}</div></div></div>
+      <div class="bottom"><span class="price">${b.price?eur(b.price):'Gratuit'}</span>
+      ${mine?`<span class="booked">✓ Place réservée</span>`:
+        b.price?(b.link?`<a class="btn small" href="${esc(b.link)}" target="_blank" rel="noopener" data-pay="${e.id}">Payer sur HelloAsso ${small(I.ext,14)}</a>`:`<button class="btn small" disabled>Lien HelloAsso à venir</button>`)
+        :`<button class="btn small" data-book="${e.id}" ${left<=0?'disabled':''}>Réserver ma place</button>`}
+      </div>${mine?`<div style="padding:0 14px 12px;background:var(--bg)"><button class="del" data-cancel="${e.id}">Annuler ma réservation</button></div>`:''}</div>`;}).join('')||'<div class="empty">Aucune billetterie ouverte pour le moment.</div>'}</div>`;
+  $$('[data-book]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.book);e.booking.going.push(me);save();render();toast('Place réservée pour « '+e.title+' »');});
+  $$('[data-pay]').forEach(a=>a.addEventListener('click',()=>{const e=S.events.find(x=>x.id===a.dataset.pay);
+    setTimeout(()=>{if(confirm('Avez-vous finalisé votre paiement HelloAsso pour « '+e.title+' » ?')){e.booking.going.push(me);save();render();toast('Place réservée');}},600);}));
+  $$('[data-cancel]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.cancel);e.booking.going=e.booking.going.filter(x=>x!==me);save();render();toast('Réservation annulée');});
+  $$('[data-list]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.list);
+    openSheet(`<h3>Inscrits – ${esc(e.title)}</h3><div class="list">${e.booking.going.map(id=>`<div class="card row">${avatar(person(id),'sm')}<div class="meta"><b>${esc(person(id).name)}</b></div></div>`).join('')||'<div class="empty">Aucun inscrit pour l\'instant.</div>'}</div>`);});
+  if(ui.focus){const el=$('#t-'+ui.focus);if(el){el.scrollIntoView({block:'center'});el.style.boxShadow='0 0 0 3px var(--gold)';}ui.focus=null;}
+  if(isBDE())setFab('Billetterie',()=>editEvent());
+}
+
+/* ================= Boutique ================= */
+function vBoutique(){
+  $('#main').innerHTML=`${isBDE()?'<div class="note">Mode BDE : ajoutez le lien HelloAsso et le prix de chaque article avec « Modifier », ou ajoutez de nouveaux articles avec le bouton en bas.</div>':''}
+    <div class="list">${S.products.map(p=>`<article class="card product"><div class="pic"><img src="${esc(p.imgs[0])}" alt="${esc(p.name)}" id="img-${p.id}"><span class="tag ${p.status==='Précommande'?'':'gold'}">${esc(p.status)}</span>
+      ${p.imgs.length>1?`<div class="thumbs">${p.imgs.map((s,i)=>`<button class="${i?'':'on'}" data-thumb="${p.id}|${i}"><img src="${esc(s)}" alt=""></button>`).join('')}</div>`:''}</div>
+      <div class="body"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h3>${esc(p.name)}</h3><span class="price" style="font-size:${p.price==null?'13px':'18px'}">${eur(p.price)}</span></div>
+      <p>${esc(p.desc)}</p>${p.sizes.length?`<div class="sizes">${p.sizes.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`:''}
+      ${p.deadline&&daysLeft(p.deadline)>=0?`<div class="note" style="margin-bottom:10px">⏳ Commandes jusqu'au ${fmtDate(p.deadline,{day:'numeric',month:'long'})} (J-${daysLeft(p.deadline)})</div>`:''}
+      ${p.link?`<a class="btn block" href="${esc(p.link)}" target="_blank" rel="noopener">Commander sur HelloAsso ${small(I.ext)}</a>`:`<button class="btn block" disabled>Lien HelloAsso bientôt disponible</button>`}
+      ${isBDE()?`<div style="display:flex;gap:8px;margin-top:8px"><button class="btn ghost small" style="flex:1" data-editp="${p.id}">Modifier</button><button class="btn ghost small" data-delp="${p.id}">Retirer</button></div>`:''}</div></article>`).join('')||'<div class="empty">Aucun article pour le moment.</div>'}</div>`;
+  $$('[data-thumb]').forEach(b=>b.onclick=()=>{const[id,i]=b.dataset.thumb.split('|');const p=S.products.find(x=>x.id===id);$('#img-'+id).src=p.imgs[i];b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+  $$('[data-editp]').forEach(b=>b.onclick=()=>editProduct(S.products.find(x=>x.id===b.dataset.editp)));
+  $$('[data-delp]').forEach(b=>b.onclick=()=>{const p=S.products.find(x=>x.id===b.dataset.delp);if(!confirm('Retirer « '+p.name+' » de la boutique ?'))return;S.products=S.products.filter(x=>x!==p);save();render();});
+  if(isBDE())setFab('Article',()=>editProduct());
+}
+function editProduct(p){
+  openSheet(`<h3>${p?'Modifier l\'article':'Nouvel article'}</h3><form id="f">
+    <label class="field">Nom<input name="name" required value="${esc(p?.name)}"></label>
+    <div class="grid2"><label class="field">Prix (€)<input type="number" name="price" min="0" step="0.5" value="${p?.price??''}" placeholder="À venir"></label>
+    <label class="field">Statut<select name="status">${['Précommande','En préparation','Disponible','Épuisé'].map(s=>`<option ${p?.status===s?'selected':''}>${s}</option>`).join('')}</select></label></div>
+    <label class="field">Description<textarea name="desc" rows="2">${esc(p?.desc)}</textarea></label>
+    <label class="field">Tailles (séparées par des virgules)<input name="sizes" value="${esc(p?.sizes.join(', '))}"></label>
+    <label class="field">Date limite de commande<input type="date" name="deadline" value="${esc(p?.deadline)}"></label>
+    <label class="field">Lien HelloAsso<input type="url" name="link" value="${esc(p?.link)}" placeholder="https://www.helloasso.com/associations/…"></label>
+    <label class="field">${p?'Ajouter des photos':'Photos'}<input type="file" name="img" accept="image/*" multiple></label>
+    <button class="btn block">Enregistrer</button></form>`);
+  $('#f').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target);
+    const pr=f.get('price');
+    const data={name:f.get('name').trim(),price:pr===''?null:+pr,status:f.get('status'),desc:f.get('desc').trim(),sizes:f.get('sizes').split(',').map(s=>s.trim()).filter(Boolean),deadline:f.get('deadline'),link:f.get('link').trim()};
+    const imgs=[];for(const file of f.getAll('img'))if(file.size)imgs.push(await storeImage(file,900));
+    if(p){Object.assign(p,data);p.imgs.push(...imgs);} else S.products.push({id:uid('s'),imgs:imgs.length?imgs:['logo-bordeaux.png'],...data});
+    if(save()){closeSheet();render();toast('Article enregistré');}};
+}
+
+/* ================= Photos ================= */
+function vPhotos(){
+  if(ui.album){
+    const a=S.albums.find(x=>x.id===ui.album);
+    $('#main').innerHTML=`<div class="photos">${a.photos.map((p,i)=>`<button data-ph="${i}"><img src="${esc(p.src)}" alt="Photo ${i+1}"></button>`).join('')}</div>
+      ${a.photos.length?'':'<div class="empty">Aucune photo pour l\'instant.</div>'}
+      ${isBDE()?`<button class="del" id="delal" style="display:block;margin:18px auto">Supprimer l'album</button>`:''}`;
+    $$('[data-ph]').forEach(b=>b.onclick=()=>lightbox(a,+b.dataset.ph));
+    if($('#delal'))$('#delal').onclick=()=>{if(!confirm('Supprimer l\'album « '+a.title+' » ?'))return;S.albums=S.albums.filter(x=>x!==a);save();go('photos');};
+    if(isBDE())setFab('Photos',()=>pickPhotos(a));
+    return;
+  }
+  const f=ui.filter||'Tous';
+  const al=S.albums.filter(a=>f==='Tous'||a.promo===f||a.promo==='Tous');
+  $('#main').innerHTML=`<div class="chips">${['Tous',...PROMOS].map(t=>`<button class="chip ${t===f?'on':''}" data-f="${t}">${t==='Tous'?'Toutes les promos':t}</button>`).join('')}</div>
+    <div class="album-grid">${al.map(a=>`<button class="album" data-al="${a.id}"><div class="cover" style="background-image:url('${a.photos[0]?a.photos[0].src.replace(/'/g,'%27'):''}')"></div><div class="cap"><b>${esc(a.title)}</b><span>${a.promo==='Tous'?'Toutes promos':esc(a.promo)} · ${esc(a.year)} · ${a.photos.length} photo${a.photos.length>1?'s':''}</span></div></button>`).join('')}</div>`;
+  $$('[data-f]').forEach(b=>b.onclick=()=>{ui.filter=b.dataset.f;render();});
+  $$('[data-al]').forEach(b=>b.onclick=()=>go('photos',{album:b.dataset.al}));
+  if(isBDE())setFab('Album',newAlbum);
+}
+function lightbox(a,i){
+  const lb=$('#lightbox');lb.hidden=false;
+  const draw=()=>{lb.innerHTML=`<img src="${esc(a.photos[i].src)}" alt=""><div style="display:flex;gap:12px;align-items:center">
+    <button class="icon-btn" id="lp" ${i?'':'style="visibility:hidden"'}>${I.back}</button><span style="font-size:13px">${i+1} / ${a.photos.length}</span><button class="icon-btn" id="ln" ${i<a.photos.length-1?'':'style="visibility:hidden"'}>${I.next}</button></div>
+    <div style="display:flex;gap:10px"><a class="btn small gold" href="${esc(a.photos[i].src)}" download="MDAFC-${esc(a.title)}-${i+1}">Télécharger</a><button class="btn small ghost" id="lc">Fermer</button></div>`;
+    $('#lp').onclick=()=>{i--;draw();};$('#ln').onclick=()=>{i++;draw();};$('#lc').onclick=()=>{lb.hidden=true;};};
+  draw();
+}
+function newAlbum(){
+  openSheet(`<h3>Nouvel album</h3><form id="f">
+    <label class="field">Titre<input name="title" required placeholder="Photo de classe, Magistérium, Londres…"></label>
+    <div class="grid2"><label class="field">Promo<select name="promo"><option value="Tous">Toutes</option>${PROMOS.map(p=>`<option>${p}</option>`).join('')}</select></label>
+    <label class="field">Année<input name="year" value="2026-2027"></label></div>
+    <label class="field">Photos<input type="file" name="files" accept="image/*" multiple></label>
+    <button class="btn block">Créer l'album</button></form>`);
+  $('#f').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target);
+    const photos=[];for(const file of f.getAll('files'))if(file.size)photos.push({src:await storeImage(file,1200)});
+    S.albums.unshift({id:uid('al'),title:f.get('title').trim(),promo:f.get('promo'),year:f.get('year').trim(),photos});
+    if(save()){closeSheet();render();toast('Album créé');}else S.albums.shift();};
+}
+function pickPhotos(a){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;
+  inp.onchange=async()=>{const n=inp.files.length;for(const file of inp.files)a.photos.push({src:await storeImage(file,1200)});if(save()){render();toast(n+' photo(s) ajoutée(s)');}else a.photos.splice(-n);};
+  inp.click();
+}
+// Photos : redimensionnées puis envoyées dans le stockage partagé (ou gardées sur l'appareil en mode démo)
+async function storeImage(file,max){const d=await toDataURL(file,max);if(Backend.mode==='local')return d;toast('Envoi de la photo…');const blob=await (await fetch(d)).blob();return await Backend.upload(blob,'jpg');}
+function toDataURL(file,max){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=img.width*k;c.height=img.height*k;c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82));};img.src=r.result;};r.readAsDataURL(file);});}
+
+/* ================= Drive (cours & annales) ================= */
+const KINDS=[['Cours','📘'],['Annales','📝'],['Fiches','🗂️']];
+const chevron=()=>small(I.next,18,'color:var(--muted);flex-shrink:0');
+function vDrive(){
+  const sem=ui.sem||S.semester;
+  if(!ui.promo){
+    $('#main').innerHTML=`<div class="note">📌 Partagez ici les cours des années précédentes et les anciens sujets d'examen. Les étudiants des trois promos y ont accès.</div>
+      <label class="search">${I.search}<input id="dq" placeholder="Rechercher un cours, une matière…" value="${esc(ui.q||'')}"></label>
+      <div id="dres"></div>
+      <div id="dmain"><div class="list">${PROMOS.map(p=>{const n=S.files.filter(f=>f.promo===p).length,ns=S.subjects[p][S.semester].length;
+        return `<button class="card folder" data-promo="${p}"><span class="ico">📁</span><div style="flex:1"><b style="font-size:15.5px">${p}</b><div class="sub">${ns} matières au ${S.semester} · ${n} document${n>1?'s':''}</div></div>${chevron()}</button>`;}).join('')}</div>
+      <div class="section-title">Ajouts récents</div><div class="list">${[...S.files].sort((a,b)=>b.t-a.t).slice(0,4).map(fileRow).join('')||'<div class="empty">Aucun document partagé pour l\'instant.<br>Ouvrez une promo puis une matière pour en ajouter un.</div>'}</div></div>`;
+    const q=$('#dq');q.oninput=()=>{ui.q=q.value;const r=ui.q.trim().toLowerCase();
+      const subj=r?PROMOS.flatMap(p=>['S1','S2'].flatMap(s=>S.subjects[p][s].filter(x=>x.n.toLowerCase().includes(r)).map(x=>({p,s,x})))):[];
+      $('#dres').innerHTML=r?`<div class="list" style="margin-bottom:14px">${subj.map(({p,s,x})=>`<button class="card folder" data-jump="${esc(JSON.stringify({promo:p,sem:s,subject:x.n}))}"><span class="ico">📚</span><div style="flex:1;min-width:0"><b>${esc(x.n)}</b><div class="sub">${p} · ${s} · ${x.t}</div></div>${chevron()}</button>`).join('')}${S.files.filter(f=>(f.title+' '+f.subject+' '+f.kind+' '+f.promo).toLowerCase().includes(r)).map(fileRow).join('')}${!subj.length&&!S.files.some(f=>(f.title+' '+f.subject).toLowerCase().includes(r))?'<div class="empty">Aucun résultat.</div>':''}</div>`:'';
+      $('#dmain').hidden=!!r;bindFiles();$$('[data-jump]').forEach(b=>b.onclick=()=>go('drive',JSON.parse(b.dataset.jump)));};
+    if(ui.q)q.oninput();
+    $$('[data-promo]').forEach(b=>b.onclick=()=>go('drive',{promo:b.dataset.promo}));
+    bindFiles();
+  } else if(!ui.subject){
+    const subs=S.subjects[ui.promo][sem];
+    const group=t=>subs.filter(x=>x.t===t).map(x=>{const fs=S.files.filter(f=>f.promo===ui.promo&&f.subject===x.n);
+      return `<button class="card folder" data-subj="${esc(x.n)}"><span class="ico">📚</span><div style="flex:1;min-width:0"><b style="font-size:14.5px">${esc(x.n)}</b><div class="sub">${x.d?esc(x.d)+' · ':''}${fs.length} document${fs.length>1?'s':''}</div></div>${chevron()}</button>`;}).join('');
+    $('#main').innerHTML=`<div class="seg">${['S1','S2'].map(s=>`<button class="${s===sem?'on':''}" data-sem="${s}">Semestre ${s.slice(1)}${s===S.semester?' · en cours':''}</button>`).join('')}</div>
+      ${subs.length?`<div class="section-title">Cours de la fac${ui.promo==='Mag 3'?' (Master 2)':''}</div><div class="list">${group(F)||'<div class="empty" style="padding:10px">—</div>'}</div>
+      <div class="section-title">Matières du Magistère</div><div class="list">${group(M)||'<div class="empty" style="padding:10px">—</div>'}</div>`
+      :`<div class="empty">Les matières du ${sem} ne sont pas encore renseignées.${isBDE()?'<br>Ajoutez-les avec le bouton en bas.':'<br>Le BDE les ajoutera dès qu\'elles seront connues.'}</div>`}
+      ${isBDE()?`<button class="btn ghost block small" id="editSubj" style="margin-top:16px">Modifier la liste des matières (BDE)</button>`:''}`;
+    $$('[data-sem]').forEach(b=>b.onclick=()=>go('drive',{promo:ui.promo,sem:b.dataset.sem}));
+    $$('[data-subj]').forEach(b=>b.onclick=()=>go('drive',{promo:ui.promo,sem,subject:b.dataset.subj}));
+    if($('#editSubj'))$('#editSubj').onclick=()=>editSubjects(ui.promo,sem);
+    if(isBDE())setFab('Matière',()=>addSubject(ui.promo,sem));
+  } else {
+    const k=ui.kind||'Cours';
+    const fs=S.files.filter(f=>f.promo===ui.promo&&f.subject===ui.subject&&f.kind===k).sort((a,b)=>b.year.localeCompare(a.year)||b.t-a.t);
+    $('#main').innerHTML=`<div class="seg">${KINDS.map(([x,ic])=>`<button class="${x===k?'on':''}" data-kind="${x}">${ic} ${x}</button>`).join('')}</div>
+      <div class="list">${fs.map(fileRow).join('')||`<div class="empty">Aucun document dans « ${k} » pour l'instant.<br>Soyez le premier à en partager un !</div>`}</div>`;
+    $$('[data-kind]').forEach(b=>b.onclick=()=>{ui.kind=b.dataset.kind;render();});
+    bindFiles();
+    setFab('Partager',()=>uploadFile(ui.promo,ui.subject,k));
+  }
+}
+function addSubject(promo,sem){
+  openSheet(`<h3>Ajouter une matière – ${promo} · ${sem}</h3><form id="f">
+    <label class="field">Nom de la matière<input name="n" required></label>
+    <label class="field">Type<select name="t"><option>${F}</option><option>${M}</option></select></label>
+    <label class="field">Détail (CM/TD, UE, enseignant…)<input name="d"></label>
+    <button class="btn block">Ajouter</button></form>`);
+  $('#f').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);S.subjects[promo][sem].push({n:f.get('n').trim(),t:f.get('t'),d:f.get('d').trim()});save();closeSheet();render();toast('Matière ajoutée');};
+}
+function editSubjects(promo,sem){
+  const subs=S.subjects[promo][sem];
+  openSheet(`<h3>Matières – ${promo} · ${sem}</h3>
+    <div class="list">${subs.map((x,i)=>`<div class="card row" style="padding:10px 12px"><div class="meta"><b style="font-size:14px">${esc(x.n)}</b><span>${x.t}${x.d?' · '+esc(x.d):''}</span></div><button class="del" data-rm="${i}">retirer</button></div>`).join('')||'<div class="empty">Aucune matière.</div>'}</div>
+    <div class="section-title">Semestre en cours pour toute l'application</div>
+    <div class="seg">${['S1','S2'].map(s=>`<button class="${s===S.semester?'on':''}" data-cur="${s}">${s}</button>`).join('')}</div>`);
+  $$('[data-rm]').forEach(b=>b.onclick=()=>{if(!confirm('Retirer « '+subs[+b.dataset.rm].n+' » ? Les documents déjà partagés restent accessibles via la recherche.'))return;subs.splice(+b.dataset.rm,1);save();editSubjects(promo,sem);render();});
+  $$('[data-cur]').forEach(b=>b.onclick=()=>{S.semester=b.dataset.cur;save();editSubjects(promo,sem);render();toast('Semestre en cours : '+S.semester);});
+}
+function fileRow(f){
+  return `<button class="card folder file" data-file="${f.id}"><span class="ico">${f.url&&!f.data?'🔗':'📄'}</span><div style="flex:1;min-width:0"><b style="font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.title)}</b>
+    <div class="sub">${esc(f.kind)} · ${esc(f.subject)} · ${esc(f.year)}</div><div style="font-size:11.5px;color:var(--muted)">Partagé par ${esc(person(f.author).name)} · ${ago(f.t)}</div></div></button>`;
+}
+function bindFiles(){$$('[data-file]').forEach(b=>b.onclick=()=>openFile(S.files.find(f=>f.id===b.dataset.file)));}
+function openFile(f){
+  if(f.data){const a=document.createElement('a');a.href=f.data;a.download=f.fname||f.title;a.click();return;}
+  if(f.url)window.open(f.url,'_blank','noopener');
+}
+function uploadFile(promo,subject,kind){
+  openSheet(`<h3>Partager un document</h3><form id="f">
+    <div class="note" style="margin:0">${esc(promo)} · ${esc(subject)}</div>
+    <label class="field">Type<select name="kind">${KINDS.map(([k])=>`<option ${k===kind?'selected':''}>${k}</option>`).join('')}</select></label>
+    <label class="field">Titre<input name="title" required placeholder="Ex. Examen janvier 2025 + corrigé"></label>
+    <label class="field">Année universitaire<input name="year" required value="2025-2026"></label>
+    <label class="field">Fichier (PDF, Word, image…)<input type="file" name="file"></label>
+    <label class="field">…ou lien (Google Drive, OneDrive…)<input type="url" name="url" placeholder="https://drive.google.com/…"></label>
+    <button class="btn block">Partager avec les promos</button></form>`);
+  $('#f').onsubmit=async ev=>{ev.preventDefault();const fd=new FormData(ev.target);const file=fd.get('file'),url=fd.get('url').trim();
+    if(!(file&&file.size)&&!url){toast('Ajoutez un fichier ou un lien');return;}
+    let data='';let link=url;if(file&&file.size){
+      if(Backend.mode!=='local'){if(file.size>25e6){toast('Fichier limité à 25 Mo. Utilisez plutôt un lien.');return;}toast('Envoi du fichier…');try{link=await Backend.upload(file,(file.name.split('.').pop()||'bin').toLowerCase());}catch(err){toast('Échec de l\'envoi : '+err.message);return;}}
+      else{if(file.size>1.5e6){toast('Démo : fichier limité à 1,5 Mo. Utilisez plutôt un lien.');return;}data=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file);});}}
+    S.files.push({id:uid('f'),promo,subject,kind:fd.get('kind'),title:fd.get('title').trim(),fname:file&&file.size?file.name:'',year:fd.get('year').trim(),url:link,data,author:myId(),t:Date.now()});
+    if(save()){closeSheet();ui.kind=fd.get('kind');render();toast('Document partagé');}else S.files.pop();};
+}
+
+/* ================= Sondages ================= */
+function pollCard(p){
+  const me=myId(),total=p.options.reduce((a,o)=>a+o.votes.length,0),voted=p.options.some(o=>o.votes.includes(me)),show=voted||p.closed;
+  return `<div class="card poll"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span class="tag ${p.closed?'':'green'}">${p.closed?'Terminé':'En cours'}</span><span class="sub">par ${esc(person(p.author).name)}</span></div>
+    <h3>${esc(p.question)}</h3>
+    ${p.options.map((o,i)=>{const pct=total?Math.round(o.votes.length/total*100):0;const mine=o.votes.includes(me);
+      return `<button class="opt ${mine?'mine':''}" data-vote="${p.id}|${i}" ${p.closed?'disabled':''}>${show?`<i class="bar" style="width:${pct}%"></i>`:''}<span><span>${mine?'✓ ':''}${esc(o.text)}</span>${show?`<b>${pct} %</b>`:''}</span></button>`;}).join('')}
+    <div class="sub" style="display:flex;justify-content:space-between;margin-top:4px"><span>${total} vote${total>1?'s':''}${voted&&!p.closed?' · touchez une autre réponse pour changer':''}</span>
+    ${isBDE()?`<span><button class="del" data-close="${p.id}">${p.closed?'rouvrir':'clôturer'}</button> · <button class="del" data-delpoll="${p.id}">supprimer</button></span>`:''}</div></div>`;
+}
+function vSondages(){
+  const list=[...S.polls].sort((a,b)=>(a.closed-b.closed)||b.t-a.t);
+  $('#main').innerHTML=`<div class="list">${list.map(pollCard).join('')||'<div class="empty">Aucun sondage pour le moment.</div>'}</div>`;
+  $$('[data-vote]').forEach(b=>b.onclick=()=>{const[id,i]=b.dataset.vote.split('|');const p=S.polls.find(x=>x.id===id),me=myId();
+    p.options.forEach(o=>o.votes=o.votes.filter(v=>v!==me));p.options[+i].votes.push(me);save();render();});
+  $$('[data-close]').forEach(b=>b.onclick=()=>{const p=S.polls.find(x=>x.id===b.dataset.close);p.closed=!p.closed;save();render();});
+  $$('[data-delpoll]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer ce sondage ?'))return;S.polls=S.polls.filter(x=>x.id!==b.dataset.delpoll);save();render();});
+  if(isBDE())setFab('Sondage',newPoll);
+}
+function newPoll(){
+  openSheet(`<h3>Nouveau sondage</h3><form id="f">
+    <label class="field">Question<input name="q" required placeholder="Juriski : mon niveau en ski ?"></label>
+    <div class="field">Réponses<div id="opts" style="display:flex;flex-direction:column;gap:8px">${[1,2,3].map(i=>`<input class="input" name="o" placeholder="Réponse ${i}">`).join('')}</div></div>
+    <button type="button" class="link" id="addOpt" style="align-self:flex-start">+ Ajouter une réponse</button>
+    <button class="btn block">Publier le sondage</button></form>`);
+  $('#addOpt').onclick=()=>{const n=$('#opts').children.length+1;$('#opts').insertAdjacentHTML('beforeend',`<input class="input" name="o" placeholder="Réponse ${n}">`);};
+  $('#f').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const opts=f.getAll('o').map(s=>s.trim()).filter(Boolean);
+    if(opts.length<2){toast('Ajoutez au moins deux réponses');return;}
+    S.polls.unshift({id:uid('po'),question:f.get('q').trim(),options:opts.map(text=>({text,votes:[]})),author:myId(),t:Date.now(),closed:false});save();closeSheet();render();toast('Sondage publié');};
+}
+
+/* ================= Boîtes à questions (FAQ) ================= */
+function vQuestions(){
+  if(ui.board){
+    const b=S.boards.find(x=>x.id===ui.board),me=myId();
+    const qs=[...b.questions].sort((x,y)=>y.likes.length-x.likes.length||x.t-y.t);
+    const ev=S.events.find(e=>e.id===b.event);
+    $('#main').innerHTML=`<div class="card" style="margin-bottom:12px"><p style="font-size:14px;line-height:1.5">${esc(b.desc)}</p>${ev?`<p class="sub" style="margin-top:6px">📅 ${esc(ev.title)} · ${whenText(ev)}</p>`:''}</div>
+      <form class="card" id="askF" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+        <textarea class="input" name="q" rows="2" required placeholder="Votre question pour les intervenants…"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><label class="sub" style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="anon"> Anonyme</label><button class="btn small">Envoyer</button></div></form>
+      ${isBDE()?`<button class="btn ghost block small" id="export" style="margin-bottom:12px">📋 Copier toutes les questions pour les intervenants</button>`:''}
+      <div class="list">${qs.map(q=>`<div class="card q"><button class="vote ${q.likes.includes(me)?'on':''}" data-like="${q.id}" aria-label="Moi aussi">${small(I.up,16)}${q.likes.length}</button>
+        <div class="body">${esc(q.text)}<small>${q.anon?'Anonyme':esc(person(q.author).name)} · ${ago(q.t)}${isBDE()?` · <button class="del" data-ans="${q.id}">${q.answer?'modifier la réponse':'répondre'}</button> · <button class="del" data-delq="${q.id}">supprimer</button>`:''}</small>
+        ${q.answer?`<div class="answer"><b>Réponse :</b> ${esc(q.answer)}</div>`:''}</div></div>`).join('')||'<div class="empty">Aucune question pour l\'instant. Lancez-vous !</div>'}</div>`;
+    $('#askF').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);b.questions.push({id:uid('qq'),text:f.get('q').trim(),anon:!!f.get('anon'),author:myId(),likes:[],t:Date.now(),answer:''});save();render();toast('Question envoyée');};
+    $$('[data-like]').forEach(x=>x.onclick=()=>{const q=b.questions.find(y=>y.id===x.dataset.like);const i=q.likes.indexOf(me);i<0?q.likes.push(me):q.likes.splice(i,1);save();render();});
+    $$('[data-ans]').forEach(x=>x.onclick=()=>{const q=b.questions.find(y=>y.id===x.dataset.ans);const a=prompt('Réponse :',q.answer||'');if(a!==null){q.answer=a.trim();save();render();}});
+    $$('[data-delq]').forEach(x=>x.onclick=()=>{if(!confirm('Supprimer cette question ?'))return;b.questions=b.questions.filter(y=>y.id!==x.dataset.delq);save();render();});
+    if($('#export'))$('#export').onclick=async()=>{const txt=b.title+'\n\n'+qs.map((q,i)=>`${i+1}. ${q.text} (${q.likes.length} soutien${q.likes.length>1?'s':''})`).join('\n');
+      try{await navigator.clipboard.writeText(txt);toast('Questions copiées : collez-les dans un mail');}catch(e){openSheet(`<h3>Questions</h3><textarea class="input" rows="12">${esc(txt)}</textarea>`);}};
+    return;
+  }
+  $('#main').innerHTML=`<div class="note">Posez vos questions avant une réunion ou un événement. Soutenez celles des autres avec ▲ : le BDE transmet les plus demandées aux intervenants.</div>
+    <div class="list">${[...S.boards].sort((a,b)=>b.t-a.t).map(b=>`<button class="card folder" data-board="${b.id}"><span class="ico">🙋</span><div style="flex:1;min-width:0"><b>${esc(b.title)}</b><div class="sub">${b.questions.length} question${b.questions.length>1?'s':''}</div></div>${chevron()}</button>`).join('')||'<div class="empty">Aucune boîte à questions ouverte.</div>'}</div>`;
+  $$('[data-board]').forEach(x=>x.onclick=()=>go('questions',{board:x.dataset.board}));
+  if(isBDE())setFab('Boîte',()=>{
+    openSheet(`<h3>Nouvelle boîte à questions</h3><form id="f"><label class="field">Titre<input name="t" required placeholder="Réunion CRFPA – vos questions"></label>
+      <label class="field">Description<textarea name="d" rows="2">Posez vos questions à l'avance : elles seront transmises aux intervenants.</textarea></label>
+      <label class="field">Événement lié (facultatif)<select name="e"><option value="">Aucun</option>${S.events.map(e=>`<option value="${e.id}">${esc(e.title)}</option>`).join('')}</select></label>
+      <button class="btn block">Ouvrir</button></form>`);
+    $('#f').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const id=uid('q');S.boards.push({id,title:f.get('t').trim(),desc:f.get('d').trim(),event:f.get('e'),questions:[],author:myId(),t:Date.now()});
+      const ev=S.events.find(x=>x.id===f.get('e'));if(ev)ev.board=id;save();closeSheet();render();};
+  });
+}
+
+/* ================= Stages & alternances ================= */
+function vStages(){
+  const f=ui.filter||'Tous';
+  const list=S.offers.filter(o=>f==='Tous'||o.type===f).sort((a,b)=>b.t-a.t);
+  $('#main').innerHTML=`<div class="chips">${['Tous','Stage','Alternance','Collaboration','Job étudiant'].map(t=>`<button class="chip ${t===f?'on':''}" data-f="${t}">${t==='Tous'?'Toutes les offres':t}</button>`).join('')}</div>
+    <div class="list">${list.map(o=>`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><span class="tag ${o.type==='Alternance'?'gold':''}">${esc(o.type)}</span><span class="sub">${ago(o.t)}</span></div>
+      <h3 style="font-size:15.5px;margin:8px 0 2px">${esc(o.title)}</h3>
+      <div style="font-size:13.5px;color:var(--red);font-weight:600">${esc(o.company)}${o.city?' · '+esc(o.city):''}</div>
+      <div class="sub" style="margin:4px 0">${o.period?'📅 '+esc(o.period)+' · ':''}🎓 ${esc(o.promos.join(', '))}</div>
+      ${o.desc?`<p style="font-size:13.5px;line-height:1.5;margin:6px 0">${esc(o.desc)}</p>`:''}
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">${o.link?`<a class="btn small" href="${esc(o.link)}" target="_blank" rel="noopener">Voir l'offre ${small(I.ext,14)}</a>`:''}${o.contact?`<span class="sub">✉️ ${esc(o.contact)}</span>`:''}</div>
+      <div class="sub" style="margin-top:8px">Partagée par ${esc(person(o.author).name)}${isMine(o.author)||isBDE()?` · <button class="del" data-deloff="${o.id}">retirer</button>`:''}</div></div>`).join('')||'<div class="empty">Aucune offre pour le moment.<br>Vous avez repéré un stage ou une alternance ? Partagez-le !</div>'}</div>`;
+  $$('[data-f]').forEach(b=>b.onclick=()=>{ui.filter=b.dataset.f;render();});
+  $$('[data-deloff]').forEach(b=>b.onclick=()=>{if(!confirm('Retirer cette offre ?'))return;S.offers=S.offers.filter(x=>x.id!==b.dataset.deloff);save();render();});
+  setFab('Offre',()=>{
+    openSheet(`<h3>Partager une offre</h3><form id="f">
+      <label class="field">Type<select name="type"><option>Stage</option><option>Alternance</option><option>Collaboration</option><option>Job étudiant</option></select></label>
+      <label class="field">Intitulé<input name="title" required placeholder="Stage en fiscalité des entreprises"></label>
+      <div class="grid2"><label class="field">Cabinet / entreprise<input name="company" required></label><label class="field">Ville<input name="city"></label></div>
+      <label class="field">Période<input name="period" placeholder="Janvier – juin 2027"></label>
+      <div class="field">Pour quelles promos ?<div class="checks">${PROMOS.map(p=>`<label><input type="checkbox" name="promos" value="${p}" checked>${p}</label>`).join('')}</div></div>
+      <label class="field">Description<textarea name="desc" rows="3"></textarea></label>
+      <label class="field">Lien de l'offre<input type="url" name="link" placeholder="https://…"></label>
+      <label class="field">Contact (e-mail professionnel)<input name="contact"></label>
+      <button class="btn block">Publier</button></form>`);
+    $('#f').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const promos=f.getAll('promos');if(!promos.length){toast('Choisissez au moins une promo');return;}
+      S.offers.push({id:uid('o'),type:f.get('type'),title:f.get('title').trim(),company:f.get('company').trim(),city:f.get('city').trim(),period:f.get('period').trim(),promos,desc:f.get('desc').trim(),link:f.get('link').trim(),contact:f.get('contact').trim(),author:myId(),t:Date.now()});
+      save();closeSheet();render();toast('Offre publiée');};
+  });
+}
+
+/* ================= Parrainage ================= */
+function vParrainage(){
+  const q=(ui.q||'').toLowerCase(),me=S.me.name.toLowerCase();
+  const mine=S.pairs.filter(p=>p.parrain.toLowerCase()===me||p.filleul.toLowerCase()===me);
+  const parrains=[...new Set([...PARRAINS,...S.pairs.map(p=>p.parrain)])].sort((a,b)=>a.localeCompare(b,'fr'));
+  const rows=parrains.filter(n=>!q||n.toLowerCase().includes(q)||S.pairs.some(p=>p.parrain===n&&p.filleul.toLowerCase().includes(q)));
+  $('#main').innerHTML=`${mine.length?`<div class="card" style="margin-bottom:12px;border-left:4px solid var(--gold)"><div class="section-title" style="margin:0 0 8px">Mon parrainage</div>${mine.map(p=>`<div style="font-size:14.5px;line-height:1.6">${p.parrain.toLowerCase()===me?`Votre filleul(e) : <b>${esc(p.filleul)}</b>`:`Votre parrain / marraine : <b>${esc(p.parrain)}</b>`}</div>`).join('')}</div>`:''}
+    <label class="search">${I.search}<input id="pq" placeholder="Trouver un parrain, une marraine, un filleul…" value="${esc(ui.q||'')}"></label>
+    <div class="section-title">${parrains.length} parrains & marraines · ${S.pairs.length} binôme${S.pairs.length>1?'s':''}</div>
+    <div class="list">${rows.map(n=>{const fs=S.pairs.filter(p=>p.parrain===n);
+      return `<div class="card row">${avatar({name:n},'sm')}<div class="meta"><b>${esc(n)}</b><span>${fs.length?'Filleul(e) : '+fs.map(p=>esc(p.filleul)).join(', '):'<i>Filleul(e) à attribuer</i>'}</span></div>${isBDE()?`<button class="link" data-pair="${esc(n)}">${fs.length?'Modifier':'Attribuer'}</button>`:''}</div>`;}).join('')||'<div class="empty">Aucun résultat.</div>'}</div>`;
+  const qi=$('#pq');qi.oninput=()=>{ui.q=qi.value;const pos=qi.selectionStart;vParrainage();const n=$('#pq');n.focus({preventScroll:true});n.setSelectionRange(pos,pos);};
+  $$('[data-pair]').forEach(b=>b.onclick=()=>editPair(b.dataset.pair));
+  if(isBDE())setFab('Binôme',()=>editPair(''));
+}
+function editPair(parrain){
+  const cur=S.pairs.filter(p=>p.parrain===parrain).map(p=>p.filleul).join(', ');
+  openSheet(`<h3>Binôme de parrainage</h3><form id="f">
+    <label class="field">Parrain / marraine<input name="p" required value="${esc(parrain)}" list="plist"></label>
+    <datalist id="plist">${PARRAINS.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+    <label class="field">Filleul(e)s (séparés par des virgules)<input name="f" value="${esc(cur)}" placeholder="Prénom Nom"></label>
+    <button class="btn block">Enregistrer</button></form>`);
+  $('#f').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const p=f.get('p').trim();
+    S.pairs=S.pairs.filter(x=>x.parrain!==p&&x.parrain!==parrain);
+    f.get('f').split(',').map(s=>s.trim()).filter(Boolean).forEach(fi=>S.pairs.push({parrain:p,filleul:fi}));
+    save();closeSheet();render();toast('Parrainage enregistré');};
+}
+
+/* ================= Messages ================= */
+function vMessages(){
+  const list=myChannels().map(c=>({c,last:c.msgs[c.msgs.length-1]})).sort((a,b)=>(b.c.bde-a.c.bde)||((b.last?.t||0)-(a.last?.t||0)));
+  const row=({c,last})=>{const u=unread(c);
+    const preview=last?(isMine(last.from)?'Vous : ':person(last.from).name.split(' ')[0]+' : ')+last.text:(c.desc||'');
+    return `<button class="card row" data-ch="${c.id}"><div class="avatar ch" style="background:${c.color}">${c.emoji}</div><div class="meta"><b>${esc(c.name)}</b><span>${esc(preview)}</span></div><div class="side">${last?ago(last.t):''}${u?`<span class="pill">${u}</span>`:''}</div></button>`;};
+  $('#main').innerHTML=`<div class="section-title">Salons</div><div class="list">${list.map(row).join('')}</div>`;
+  $$('[data-ch]').forEach(b=>b.onclick=()=>openChat(b.dataset.ch));
+}
+let current=null;
+function openChat(id){
+  current=S.channels.find(c=>c.id===id);
+  $('#chatHeader').innerHTML=`<button class="icon-btn" id="back" aria-label="Retour">${I.back}</button>
+    <div class="badge" style="background:${current.color};font-size:20px">${current.emoji}</div>
+    <h2>${esc(current.name)}<small>${esc(current.desc)}</small></h2>`;
+  $('#back').onclick=()=>{$('#chat').classList.remove('open');current=null;render();};
+  drawMessages();$('#chat').classList.add('open');S.read[id]=Date.now();save();
+  setTimeout(()=>$('#msgInput').focus({preventScroll:true}),320);
+}
+function drawMessages(){
+  let lastDay='';
+  $('#messages').innerHTML=current.msgs.map(m=>{const day=new Date(m.t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+    const sep=day!==lastDay?`<div class="daysep">${day}</div>`:'';lastDay=day;const me=isMine(m.from);
+    const who=m.from==='me'&&m.name?m.name:person(m.from).name;
+    return sep+`<div class="msg ${me?'me':''}">${!me?`<div class="who">${esc(who)}</div>`:''}${esc(m.text)}<time>${hm(m.t)}</time></div>`;}).join('')||'<div class="empty">Aucun message. Lancez la conversation !</div>';
+  const b=$('#messages');b.scrollTop=b.scrollHeight;
+}
+$('#composer').onsubmit=e=>{e.preventDefault();const v=$('#msgInput').value.trim();if(!v||!current)return;
+  current.msgs.push({id:uid('m'),from:myId(),name:S.me.name,text:v,t:Date.now()});S.read[current.id]=Date.now();save();$('#msgInput').value='';drawMessages();};
+
+/* ================= Annuaire (étudiants + anciens) ================= */
+let ANC=null,ancLoading=false;
+function vAnnuaire(){
+  const seg=ui.seg||'etudiants';
+  let html=`<div class="seg"><button data-seg="etudiants" class="${seg==='etudiants'?'on':''}">Étudiants</button><button data-seg="anciens" class="${seg==='anciens'?'on':''}">Réseau des anciens</button></div>`;
+  if(seg==='etudiants'){
+    html+=`<div class="section-title">Bureau du BDE 2026-2027</div>
+      <div class="list">${BDE_MEMBERS.map(m=>`<div class="card row">${avatar(m)}<div class="meta"><b>${esc(m.name)}</b><span>${esc(m.role)}</span></div><span class="tag gold">BDE</span></div>`).join('')}</div>
+      ${(()=>{const others=Object.entries(S.profiles).filter(([id])=>id!==S.uid).map(([,p])=>p);const sf=ui.pf||'Tous';
+        const list=[{...S.me,me:true},...others].filter(p=>sf==='Tous'||p.promo===sf).sort((a,b)=>(b.me?1:0)-(a.me?1:0)||a.name.localeCompare(b.name,'fr'));
+        return `<div class="section-title">Étudiants inscrits (${others.length+1})</div>
+        <div class="chips">${['Tous',...PROMOS].map(t=>`<button class="chip ${t===sf?'on':''}" data-pf="${t}">${t}</button>`).join('')}</div>
+        <div class="list">${list.map(p=>`<div class="card row">${avatar(p)}<div class="meta"><b>${esc(p.name)}${p.me?' (vous)':''}</b><span>${esc(p.promo||'')}</span></div></div>`).join('')}</div>
+        ${Backend.mode==='local'?'<div class="note" style="margin-top:12px">Mode démo : les autres étudiants apparaîtront ici une fois la base partagée en place.</div>':''}`;})()}`;
+    $('#main').innerHTML=html;
+  } else if(!ANC){
+    $('#main').innerHTML=html+'<div class="empty" id="ancWait">Chargement du réseau des anciens…</div>';
+    if(!ancLoading){ancLoading=true;Backend.loadAnciens().then(a=>{ANC=a;ancLoading=false;if($('#ancWait'))render();}).catch(e=>{ancLoading=false;toast('Réseau des anciens indisponible : '+(e.message||e));});}
+  } else {
+    const q=(ui.q||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''),dec=ui.dec||'Toutes';
+    const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    const decade=p=>{const y=parseInt(p);return isNaN(y)?'?':y<1990?'1980':y<2000?'1990':y<2010?'2000':y<2020?'2010':'2020';};
+    const res=ANC.filter(a=>(dec==='Toutes'||decade(a.p)===dec)&&(!q||norm(a.n+' '+a.c+' '+a.j+' '+a.v+' '+a.p).includes(q)))
+      .sort((a,b)=>(b.p||'').localeCompare(a.p||'')||a.n.localeCompare(b.n,'fr'));
+    const lim=ui.lim||40;
+    html+=`<label class="search">${I.search}<input id="aq" placeholder="Nom, cabinet, ville, poste…" value="${esc(ui.q||'')}"></label>
+      <div class="chips">${['Toutes','2020','2010','2000','1990','1980'].map(d=>`<button class="chip ${d===dec?'on':''}" data-dec="${d}">${d==='Toutes'?'Toutes les promos':'Années '+d.slice(2)}</button>`).join('')}</div>
+      <div class="section-title">${res.length} ancien${res.length>1?'s':''} sur ${ANC.length}</div>
+      <div class="list">${res.slice(0,lim).map((a,i)=>`<button class="card row" data-anc="${ANC.indexOf(a)}">${avatar({name:a.n},'sm')}<div class="meta"><b>${esc(a.n)}</b><span>${esc([a.c,a.j].filter(Boolean).join(' · ')||'—')}</span></div><span class="tag">${esc((a.p||'?').replace('/','-'))}</span></button>`).join('')||'<div class="empty">Aucun résultat.</div>'}</div>
+      ${res.length>lim?`<button class="btn ghost block small" id="more" style="margin-top:12px">Afficher plus (${res.length-lim} restants)</button>`:''}
+      <div class="note" style="margin-top:14px">Source : annuaire des anciens 2024. Seules les coordonnées professionnelles sont affichées.</div>`;
+    $('#main').innerHTML=html;
+    const qi=$('#aq');qi.oninput=()=>{ui.q=qi.value;ui.lim=40;const pos=qi.selectionStart;vAnnuaire();const n=$('#aq');n.focus({preventScroll:true});n.setSelectionRange(pos,pos);};
+    $$('[data-dec]').forEach(b=>b.onclick=()=>{ui.dec=b.dataset.dec;ui.lim=40;render();});
+    if($('#more'))$('#more').onclick=()=>{ui.lim=lim+40;const st=$('#main').scrollTop;vAnnuaire();$('#main').scrollTop=st;};
+    $$('[data-anc]').forEach(b=>b.onclick=()=>{const a=ANC[+b.dataset.anc];
+      openSheet(`<div class="profile-head">${avatar({name:a.n})}<h3>${esc(a.n)}</h3><p>Promo ${esc(a.p||'inconnue')}</p></div>
+        <div class="card kv">${a.c?`<b>Cabinet / entreprise</b>${esc(a.c)}`:''}${a.j?`<b>Poste / situation</b>${esc(a.j)}`:''}${a.v||a.y?`<b>Ville</b>${esc([a.v,a.y].filter(Boolean).join(', '))}`:''}
+        ${a.m?`<b>E-mail professionnel</b><a class="link" href="mailto:${esc(a.m)}">${esc(a.m)}</a>`:''}${a.t?`<b>Téléphone professionnel</b><a class="link" href="tel:${esc(a.t.replace(/\s/g,''))}">${esc(a.t)}</a>`:''}
+        ${!a.c&&!a.j&&!a.m&&!a.t?'<span class="sub">Pas d\'informations professionnelles renseignées.</span>':''}</div>`);});
+  }
+  $$('[data-seg]').forEach(b=>b.onclick=()=>go('annuaire',{seg:b.dataset.seg}));
+  $$('[data-pf]').forEach(b=>b.onclick=()=>{ui.pf=b.dataset.pf;render();});
+}
+
+/* ================= Espace BDE ================= */
+function vBDE(){
+  const m=bdeMember(S.me.bde),f=ui.filter||'all';
+  const todos=S.todos.filter(t=>f==='all'||(f==='me'&&t.who===m.id)||(f==='done'?t.done:false)).filter(t=>f==='done'||!t.done||f==='all')
+    .sort((a,b)=>(a.done-b.done)||((a.due||'9')).localeCompare(b.due||'9'));
+  $('#main').innerHTML=`<div class="bde-banner">${avatar(m)}<div><b>${esc(m.name)}</b><span>${esc(m.role)} · ${Backend.mode==='supabase'?'synchronisé ✓':Backend.mode==='mock'?'simulation de synchro':'mode démo (sur cet appareil)'}</span></div></div>
+    <div class="section-title">Drive du BDE</div>
+    <div class="card row"><span style="font-size:28px">🗂️</span><div class="meta"><b>Google Drive du bureau</b><span>${esc(S.bdeDrive)}</span></div><a class="btn small" href="${esc(S.bdeDrive)}" target="_blank" rel="noopener">Ouvrir</a></div>
+    <button class="del" id="editDrive" style="margin:6px 4px">Changer le lien du drive</button>
+    <div class="section-title">To-do du bureau <button id="addTodo">+ Tâche</button></div>
+    <div class="seg">${[['all','À faire'],['me','Mes tâches'],['done','Terminées']].map(([k,l])=>`<button class="${k===f?'on':''}" data-tf="${k}">${l}</button>`).join('')}</div>
+    <div class="list">${todos.filter(t=>f==='done'?t.done:true).map(t=>`<div class="card todo"><button class="check ${t.done?'on':''}" data-done="${t.id}" aria-label="Marquer comme fait">${t.done?'✓':''}</button>
+      <div class="txt ${t.done?'done':''}">${esc(t.text)}<small>${t.who?'👤 '+esc(bdeMember(t.who)?.name||''):'👥 Tout le bureau'}${t.due?' · 📅 '+fmtDate(t.due,{day:'numeric',month:'short'})+(daysLeft(t.due)<0&&!t.done?' <b style="color:var(--red)">(en retard)</b>':''):''} · ajouté par ${esc(person(t.by).name.split(' ')[0])}</small></div>
+      <button class="del" data-deltodo="${t.id}">×</button></div>`).join('')||'<div class="empty" style="padding:14px">Rien ici 🎉</div>'}</div>
+    <div class="section-title">Publier pour les étudiants</div>
+    <div class="actions">
+      <button data-act="rappel">🔔 Rappel</button><button data-act="event">📅 Événement</button>
+      <button data-act="poll">📊 Sondage</button><button data-act="board">🙋 Boîte à questions</button>
+      <button data-act="shop">🧥 Article merch</button><button data-act="album">📸 Album photo</button>
+      <button data-act="subjects">📚 Matières S1 / S2</button><button data-act="pairs">🤝 Parrainage</button>
+    </div>
+    ${Backend.mode!=='local'?`<div class="section-title">Accès des promos</div>
+    <div class="card" id="codesCard"><p class="sub" style="line-height:1.5">Chargement des codes…</p></div>`:''}
+    <div class="section-title">Salon privé</div>
+    <button class="card row" id="bdeChat"><div class="avatar ch" style="background:var(--gold)">🔒</div><div class="meta"><b>Bureau du BDE</b><span>Discussion réservée aux 7 membres</span></div>${chevron()}</button>
+    <div class="section-title">Sécurité</div>
+    ${Backend.mode==='local'?`<div class="card"><p class="sub" style="line-height:1.5;margin-bottom:10px">Mode démo : le mot de passe BDE est commun aux 7 membres.</p>
+      <form id="pwF" style="display:flex;gap:8px"><input class="input" type="password" name="pw" minlength="6" required placeholder="Nouveau mot de passe" autocomplete="new-password" style="padding:10px 12px"><button class="btn small">Changer</button></form></div>`
+    :`<div class="card"><p class="sub" style="line-height:1.5;margin-bottom:10px">🔐 Chaque membre a son propre mot de passe. Seules les 7 adresses enregistrées comme membres du BDE peuvent créer un compte.</p>
+      <form id="pwF" style="display:flex;gap:8px"><input class="input" type="password" name="pw" minlength="8" required placeholder="Nouveau mot de passe" autocomplete="new-password" style="padding:10px 12px"><button class="btn small">Changer</button></form></div>`}`;
+  $$('[data-tf]').forEach(b=>b.onclick=()=>{ui.filter=b.dataset.tf;render();});
+  $$('[data-done]').forEach(b=>b.onclick=()=>{const t=S.todos.find(x=>x.id===b.dataset.done);t.done=!t.done;save();render();});
+  $$('[data-deltodo]').forEach(b=>b.onclick=()=>{if(!confirm('Supprimer cette tâche ?'))return;S.todos=S.todos.filter(x=>x.id!==b.dataset.deltodo);save();render();});
+  $('#addTodo').onclick=()=>{
+    openSheet(`<h3>Nouvelle tâche</h3><form id="f"><label class="field">Tâche<input name="t" required placeholder="Réserver la salle pour la réunion CRFPA"></label>
+      <div class="grid2"><label class="field">Pour<select name="w"><option value="">Tout le bureau</option>${BDE_MEMBERS.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>
+      <label class="field">Échéance<input type="date" name="d"></label></div><button class="btn block">Ajouter</button></form>`);
+    $('#f').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);S.todos.push({id:uid('t'),text:fd.get('t').trim(),who:fd.get('w'),due:fd.get('d'),done:false,by:S.me.bde,t:Date.now()});save();closeSheet();render();toast('Tâche ajoutée pour le bureau');};
+  };
+  $('#editDrive').onclick=()=>{const u=prompt('Lien du Google Drive du BDE (de préférence le lien de partage du dossier) :',S.bdeDrive);if(u&&/^https?:\/\//.test(u.trim())){S.bdeDrive=u.trim();save();render();}};
+  const acts={rappel:newReminder,event:()=>editEvent(),poll:newPoll,board:()=>go('questions'),shop:()=>go('boutique'),album:()=>go('photos'),subjects:()=>go('drive'),pairs:()=>go('parrainage')};
+  $$('[data-act]').forEach(b=>b.onclick=acts[b.dataset.act]);
+  $('#bdeChat').onclick=()=>openChat('cb');
+  if($('#codesCard'))drawCodes();
+  if($('#pwF'))$('#pwF').onsubmit=async e=>{e.preventDefault();const pw=new FormData(e.target).get('pw');
+    if(Backend.mode==='local'){S.bdeHash=await sha256(pw);save();}else{try{await Backend.changePassword(pw);}catch(err){toast('Échec : '+err.message);return;}}
+    e.target.reset();toast('Mot de passe modifié');};
+}
+
+/* ---------- Espace BDE : codes d'accès et inscrits ---------- */
+async function drawCodes(){
+  const box=$('#codesCard');if(!box)return;
+  try{
+    const [codes,studs]=await Promise.all([Backend.getCodes(),Backend.listStudents()]);
+    if(!$('#codesCard'))return;
+    const n=p=>studs.filter(x=>x.promo===p).length;
+    box.innerHTML=`<p class="sub" style="line-height:1.5;margin-bottom:10px">Chaque étudiant entre une fois avec le code de sa promo. Changez un code s'il a circulé hors du Magistère : les inscrits gardent leur accès.</p>
+      ${codes.map(c=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line);gap:6px"><div class="meta"><b>${esc(c.promo)}</b><span style="font-family:ui-monospace,monospace;letter-spacing:.05em;font-weight:700;color:var(--text)">${esc(c.code)}</span><span>${n(c.promo)} inscrit${n(c.promo)>1?'s':''}</span></div>
+        <button class="btn ghost small" data-copy="${esc(c.code)}">Copier</button><button class="btn ghost small" data-code="${esc(c.promo)}">Changer</button></div>`).join('')}
+      <button class="btn ghost block small" id="studList" style="margin-top:10px">Voir les inscrits (${studs.length})</button>`;
+    $$('[data-copy]').forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(b.dataset.copy).then(()=>toast('Code copié'),()=>toast(b.dataset.copy));});
+    $$('[data-code]').forEach(b=>b.onclick=async()=>{const p=b.dataset.code;
+      const sug=p.replace(' ','').toUpperCase()+'-'+Array.from(crypto.getRandomValues(new Uint8Array(5)),x=>'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[x%31]).join('');
+      const c=prompt('Nouveau code pour '+p+' (6 caractères minimum) :',sug);if(!c)return;
+      try{await Backend.setCode(p,c);toast('Code '+p+' modifié');drawCodes();}catch(e){toast(e.message);}});
+    $('#studList').onclick=()=>{
+      const name=id=>S.profiles[id]?.name||'(profil non renseigné)';
+      const list=studs.slice().sort((a,b)=>a.promo.localeCompare(b.promo)||name(a.id).localeCompare(name(b.id),'fr'));
+      openSheet(`<h3>Étudiants inscrits (${studs.length})</h3><p class="sub" style="margin-bottom:10px">Retirer quelqu'un lui coupe l'accès. Pensez à changer le code de sa promo pour qu'il ne puisse pas revenir.</p>
+        <div class="list">${list.map(x=>`<div class="card row"><div class="meta"><b>${esc(name(x.id))}</b><span>${esc(x.promo)} · inscrit le ${new Date(x.joined_at).toLocaleDateString('fr-FR')}</span></div><button class="btn ghost small" data-kick="${x.id}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>`);
+      $$('[data-kick]').forEach(b=>b.onclick=async()=>{if(!confirm('Retirer '+name(b.dataset.kick)+" de l'application ?"))return;
+        try{await Backend.removeStudent(b.dataset.kick);toast('Accès retiré');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
+    };
+  }catch(e){box.innerHTML=`<p class="sub">Codes indisponibles : ${esc(e.message||String(e))}</p>`;}
+}
+
+/* ================= Profil + connexion BDE ================= */
+function vProfil(){
+  const me=S.me,m=bdeMember(me.bde);
+  $('#main').innerHTML=`<div class="profile-head">${avatar(me)}<h3>${esc(me.name)}</h3><p>${esc(me.promo)}${m?' · '+esc(m.role)+' du BDE':''}</p></div>
+   <form class="card" id="pf" style="display:flex;flex-direction:column;gap:12px">
+     <label class="field">Prénom et nom<input name="name" value="${esc(me.name)}" required></label>
+     <label class="field">Promotion<select name="promo">${PROMOS.map(p=>`<option ${p===me.promo?'selected':''}>${p}</option>`).join('')}</select></label>
+     <label class="field">Centres d'intérêt<input name="interests" value="${esc(me.interests||'')}" placeholder="Ex. Fiscalité, M&amp;A"></label>
+     <button class="btn block">Enregistrer</button></form>
+   <div class="section-title">Connexion BDE</div>
+   <div class="card">${m
+     ?`<p style="font-size:14px;line-height:1.5">✅ Connecté(e) en tant que <b>${esc(m.name)}</b> (${esc(m.role)}).</p>
+       <div style="display:flex;gap:8px;margin-top:10px"><button class="btn small" style="flex:1" data-go="bde">Ouvrir l'Espace BDE</button><button class="btn ghost small" id="bdeOff">Se déconnecter</button></div>`
+     :Backend.mode!=='local'?`<p style="font-size:13.5px;color:var(--muted);line-height:1.5;margin-bottom:10px">Réservé aux 7 membres du bureau, avec l'e-mail enregistré par le BDE et votre mot de passe personnel.</p>
+       <form id="bdeF" style="display:flex;flex-direction:column;gap:8px">
+         <input class="input" type="email" name="email" required placeholder="Votre e-mail" autocomplete="username">
+         <input class="input" type="password" name="pw" required minlength="8" placeholder="Mot de passe (8 caractères min.)" autocomplete="current-password">
+         <input class="input" type="password" name="pw2" minlength="8" placeholder="Retapez le mot de passe" autocomplete="new-password" hidden>
+         <button class="btn small" id="bdeGo">Se connecter</button>
+         <button type="button" class="btn ghost small" id="bdeMode">Première connexion : créer mon mot de passe</button></form>`
+     :`<p style="font-size:13.5px;color:var(--muted);line-height:1.5;margin-bottom:10px">Réservé aux 7 membres du bureau : choisissez votre nom et entrez le mot de passe BDE.</p>
+       <form id="bdeF" style="display:flex;flex-direction:column;gap:8px">
+         <select class="input" name="who" required><option value="">Je suis…</option>${BDE_MEMBERS.map(x=>`<option value="${x.id}">${esc(x.name)} – ${esc(x.role)}</option>`).join('')}</select>
+         <div style="display:flex;gap:8px"><input class="input" type="password" name="pw" required placeholder="Mot de passe BDE" autocomplete="current-password" style="flex:1;min-width:0"><button class="btn small">Connexion</button></div></form>`}</div>
+   <div class="section-title">Notifications</div>
+   <div class="card" style="font-size:13.5px;line-height:1.5;color:var(--muted)">Activez la cloche 🔔 sur un rappel pour être notifié(e) à J-7, J-3, J-1 et le jour J.<br>État : <b id="nstate" style="color:var(--text)"></b></div>
+   <button class="btn ghost block" id="reset" style="margin-top:18px">Réinitialiser la démo</button>`;
+  $('#nstate').textContent=!('Notification' in window)?'non pris en charge sur ce navigateur':Notification.permission==='granted'?'autorisées':Notification.permission==='denied'?'bloquées':'pas encore demandées';
+  bindGo();
+  $('#pf').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);Object.assign(me,{name:f.get('name').trim(),promo:f.get('promo'),interests:f.get('interests').trim()});save();Backend.saveProfile(me);render();toast('Profil mis à jour');};
+  if($('#bdeMode'))$('#bdeMode').onclick=()=>{const F=$('#bdeF'),c=F.dataset.mode!=='create';F.dataset.mode=c?'create':'login';
+    F.pw2.hidden=!c;F.pw2.required=c;F.pw.autocomplete=c?'new-password':'current-password';
+    $('#bdeGo').textContent=c?'Créer mon compte BDE':'Se connecter';
+    $('#bdeMode').textContent=c?"J'ai déjà un compte : me connecter":'Première connexion : créer mon mot de passe';
+    if(c)F.pw2.focus();};
+  if($('#bdeF')&&Backend.mode!=='local')$('#bdeF').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+    const create=e.target.dataset.mode==='create',pw=f.get('pw');
+    if(create&&f.get('pw2')!==pw){toast('Les deux mots de passe ne correspondent pas');return;}
+    const btns=[...e.target.querySelectorAll('button')];btns.forEach(b=>b.disabled=true);
+    try{await Backend.flush();const mem=await Backend.loginBDE(f.get('email'),pw,create);
+      S.uid=Backend.uid;me.id=S.uid;me.bde=mem;me.name=bdeMember(mem).name;localSave();Backend.saveProfile(me);
+      toast((create?'Compte créé. ':'')+'Bienvenue dans l\'Espace BDE, '+me.name.split(' ')[0]+' !');go('bde');}
+    catch(err){btns.forEach(b=>b.disabled=false);toast(err.message);}};
+  else if($('#bdeF'))$('#bdeF').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);
+    if(await sha256(f.get('pw'))!==S.bdeHash){toast('Mot de passe incorrect');return;}
+    const mem=bdeMember(f.get('who'));me.bde=mem.id;me.name=mem.name;save();toast('Bienvenue dans l\'Espace BDE, '+mem.name.split(' ')[0]+' !');go('bde');};
+  if($('#bdeOff'))$('#bdeOff').onclick=async()=>{
+    if(Backend.mode!=='local'){await Backend.flush();S.uid=await Backend.logoutBDE();me.id=S.uid;me.bde=null;localSave();location.reload();return;}
+    me.bde=null;save();render();toast('Déconnecté(e) du BDE');};
+  $('#reset').hidden=Backend.mode==='supabase';
+  $('#reset').onclick=()=>{if(confirm('Effacer vos données de démonstration ?')){try{localStorage.removeItem(KEY)}catch(e){}location.reload();}};
+}
+
+/* ================= Feuille modale ================= */
+function openSheet(html){$('#sheet').innerHTML='<div class="grab"></div>'+html;$('#sheet').classList.add('show');$('#overlay').classList.add('show');$('#sheet').scrollTop=0;}
+function closeSheet(){$('#sheet').classList.remove('show');$('#overlay').classList.remove('show');flushRender();}
+$('#overlay').onclick=closeSheet;
+
+/* ================= Mises à jour en direct ================= */
+let renderPending=false;
+function liveRender(){
+  localSave();
+  if(!entered||!S.me)return;
+  if(current){current=S.channels.find(c=>c.id===current.id);if(current){drawMessages();S.read[current.id]=Date.now();}}
+  const a=document.activeElement;
+  if($('#sheet').classList.contains('show')||!$('#lightbox').hidden||(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))){renderPending=true;return;}
+  const st=$('#main').scrollTop;render();$('#main').scrollTop=st;
+}
+function flushRender(){if(renderPending){renderPending=false;setTimeout(liveRender,50);}}
+document.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))&&!$('#sheet').classList.contains('show'))flushRender();},150));
+
+/* ================= Démarrage ================= */
+(async()=>{
+  try{
+    const r=await Backend.init(S,SEED,{onChange:liveRender,onError:e=>{console.warn(e);toast('Action non enregistrée : '+(e.message||e));}});
+    if(Backend.mode!=='local'){
+      S.uid=r.uid;
+      if(S.me&&r.joined){S.me.id=S.uid;S.me.bde=r.member;if(r.member)S.me.name=bdeMember(r.member).name;Backend.saveProfile(S.me);}
+      localSave();
+      if(r.bdeRefused)setTimeout(()=>toast('Cette adresse n\'est pas enregistrée comme membre du BDE'),1200);
+      else if(r.member)setTimeout(()=>toast('Connecté(e) au BDE : '+bdeMember(r.member).name),1200);
+    }
+  }catch(e){console.warn(e);toast('Hors ligne : affichage des dernières données enregistrées');}
+  splash();
+})();
+</script>
+</body>
+</html>
