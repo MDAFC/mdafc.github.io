@@ -237,6 +237,8 @@ nav.tabs .dot{position:absolute;top:2px;right:calc(50% - 20px);min-width:17px;he
 .msg time{display:block;font-size:10.5px;color:var(--muted);text-align:right;margin-top:3px}
 .msg.me{align-self:flex-end;background:var(--red);color:var(--cream);border:none;border-bottom-left-radius:16px;border-bottom-right-radius:5px}
 .msg.me time{color:rgba(246,234,223,.75)}
+.msg time .del{margin-left:8px;font-size:11px;font-weight:600;color:inherit;opacity:.8;text-decoration:underline;padding:0}
+.msg time .del:hover{opacity:1}
 .composer{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
 .composer input{flex:1;border:1.5px solid var(--line);border-radius:999px;padding:11px 16px;outline:none;font-size:15px;background:var(--bg);min-width:0}
 .send{width:44px;height:44px;border-radius:50%;background:var(--red);color:var(--cream);display:grid;place-items:center;flex-shrink:0}
@@ -1157,7 +1159,14 @@ function drawMessages(){
   $('#messages').innerHTML=current.msgs.map(m=>{const day=new Date(m.t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
     const sep=day!==lastDay?`<div class="daysep">${day}</div>`:'';lastDay=day;const me=isMine(m.from);
     const who=m.from==='me'&&m.name?m.name:person(m.from).name;
-    return sep+`<div class="msg ${me?'me':''}">${!me?`<div class="who">${esc(who)}</div>`:''}${esc(m.text)}<time>${hm(m.t)}</time></div>`;}).join('')||'<div class="empty">Aucun message. Lancez la conversation !</div>';
+    const del=m.id&&(me||(isBDE()&&!current.dm));
+    return sep+`<div class="msg ${me?'me':''}">${!me?`<div class="who">${esc(who)}</div>`:''}${esc(m.text)}<time>${hm(m.t)}${del?`<button class="del" data-delmsg="${esc(m.id)}">Supprimer</button>`:''}</time></div>`;}).join('')||'<div class="empty">Aucun message. Lancez la conversation !</div>';
+  $$('[data-delmsg]').forEach(b=>b.onclick=async()=>{const id=b.dataset.delmsg,m=current.msgs.find(x=>x.id===id);if(!m)return;
+    const mine=isMine(m.from);
+    if(!await ask(mine?'Supprimer votre message ?':'Supprimer ce message de '+(m.name||person(m.from).name)+' pour tout le monde ?','Supprimer'))return;
+    if(current.dm)S.dms=(S.dms||[]).filter(x=>x.id!==id);
+    const i=current.msgs.indexOf(m);if(i>=0)current.msgs.splice(i,1);
+    save();drawMessages();toast('Message supprimé');});
   const b=$('#messages');b.scrollTop=b.scrollHeight;
 }
 $('#composer').onsubmit=e=>{e.preventDefault();const v=$('#msgInput').value.trim();if(!v||!current)return;
