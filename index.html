@@ -1380,6 +1380,7 @@ function flushRender(){if(renderPending){renderPending=false;setTimeout(liveRend
 document.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))&&!$('#sheet').classList.contains('show'))flushRender();},150));
 
 /* ================= Démarrage ================= */
+if(window.MDAFC_CONFIG&&String(MDAFC_CONFIG.url).startsWith('mock')){const b=document.createElement('div');b.textContent='VERSION DE TEST – rien n\'est enregistré dans la vraie application (codes : MAG1-TEST, MAG2-TEST, MAG3-TEST)';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:999;background:#E8A317;color:#2E1418;font:600 12px Inter,sans-serif;text-align:center;padding:5px 8px';document.body.appendChild(b);}
 (async()=>{
   try{
     const r=await Backend.init(S,SEED,{onChange:liveRender,onError:e=>{console.warn(e);toast('Action non enregistrée : '+(e.message||e));}});
