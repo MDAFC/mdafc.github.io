@@ -50,7 +50,10 @@ a{color:inherit}
 .btn.block{width:100%}
 .btn[disabled]{opacity:.5;pointer-events:none}
 .link{color:var(--red);font-weight:600;font-size:13px}
-.del{color:var(--muted);font-size:12px;text-decoration:underline}
+.del{color:var(--muted);font-size:12px;text-decoration:underline;cursor:pointer}
+.remember{display:flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:var(--text);margin:2px 4px}
+.remember input{width:18px;height:18px;accent-color:var(--red);flex:none}
+.remember small{font-weight:400;color:var(--muted);font-size:12px}
 
 .onboard{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;animation:fade .5s both}
 .field{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-weight:500}
@@ -543,6 +546,7 @@ function splash(){
   };
 }
 // Accès réservé aux étudiants : code de promo donné par le BDE
+const REMEMBER=`<label class="remember"><input type="checkbox" name="remember" checked> Se souvenir de moi</label>`;
 function codeGate(){
   const a=$('#splashAction');
   a.innerHTML=`<button class="btn" id="start">Rejoindre la communauté</button>`;
@@ -551,23 +555,25 @@ function codeGate(){
     a.innerHTML=`<form class="onboard" id="ob">
       <label class="field">Prénom et nom<input name="name" required placeholder="Ex. Jeanne Dupont" autocomplete="name" value="${esc(S.me?.name||'')}"></label>
       <label class="field">Code de votre promo<input name="code" required placeholder="Ex. MAG2-XXXXX" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.06em"></label>
+      ${REMEMBER}
       <p style="font-size:12.5px;color:var(--muted);line-height:1.45;text-align:center;margin:-2px 4px 2px">Réservé aux étudiants du Magistère (Mag 1, 2, 3). Le code vous est donné par le BDE.</p>
       <button class="btn block">C'est parti</button>
       <button type="button" class="btn ghost block small" id="bdeLogin">Je suis membre du BDE</button></form>`;
     $('#ob').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),btn=e.target.querySelector('.btn');btn.disabled=true;
-      try{const promo=await Backend.joinPromo(f.get('code'));
+      try{const promo=await Backend.joinPromo(f.get('code'));Backend.remember(!!f.get('remember'));
         S.me={...(S.me||{interests:''}),id:S.uid,name:f.get('name').trim(),promo,bde:null};save();Backend.saveProfile(S.me);hideSplash();toast('Bienvenue en '+promo+', '+S.me.name.split(' ')[0]+' !');}
       catch(err){btn.disabled=false;toast(err.message);}};
     $('#bdeLogin').onclick=()=>{
       a.innerHTML=`<form class="onboard" id="obB">
         <label class="field">E-mail du BDE<input name="email" type="email" required autocomplete="username"></label>
         <label class="field">Mot de passe<input name="pw" type="password" required minlength="8" autocomplete="current-password"></label>
+        ${REMEMBER}
         <button class="btn block">Se connecter</button>
         <p style="font-size:12.5px;color:var(--muted);line-height:1.45;text-align:center">Première connexion ? Entrez d'abord avec le code de votre promo, puis créez votre compte dans Profil → Connexion BDE.</p>
         <button type="button" class="btn ghost block small" id="back">Retour</button></form>`;
       $('#back').onclick=()=>{codeGate();$('#start').click();};
       $('#obB').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),btn=e.target.querySelector('.btn');btn.disabled=true;
-        try{const mem=await Backend.loginBDE(f.get('email'),f.get('pw'),false);const m=bdeMember(mem);
+        try{const mem=await Backend.loginBDE(f.get('email'),f.get('pw'),false);Backend.remember(!!f.get('remember'));const m=bdeMember(mem);
           S.uid=Backend.uid;S.me={...(S.me||{interests:'',promo:PROMOS[0]}),id:S.uid,name:m.name,bde:mem};save();Backend.saveProfile(S.me);hideSplash();toast('Bienvenue, '+m.name.split(' ')[0]+' !');}
         catch(err){btn.disabled=false;toast(err.message);}};};
   };
@@ -775,8 +781,10 @@ function showEvent(id){
   if($('#toBoard'))$('#toBoard').onclick=()=>{closeSheet();go('questions',{board:e.board});};
   $('#ics').onclick=()=>downloadICS(e);
   if($('#edit'))$('#edit').onclick=()=>editEvent(e);
-  if($('#delev'))$('#delev').onclick=async()=>{if(!await ask('Supprimer « '+e.title+' » pour tout le monde ?'))return;S.events=S.events.filter(x=>x.id!==id);save();closeSheet();render();};
+  if($('#delev'))$('#delev').onclick=()=>deleteEvent(e);
 }
+async function deleteEvent(e){if(!await ask('Supprimer « '+e.title+' » pour tout le monde ?','Supprimer'))return;
+  S.events=S.events.filter(x=>x.id!==e.id);save();closeSheet();render();toast('Événement supprimé');}
 function downloadICS(e){
   const d=e.date.replace(/-/g,''),stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
   let start,end;
@@ -825,11 +833,13 @@ function vBilletterie(){
       ${mine?`<span class="booked">✓ Place réservée</span>`:
         b.price?(b.link?`<a class="btn small" href="${esc(b.link)}" target="_blank" rel="noopener" data-pay="${e.id}">Payer sur HelloAsso ${small(I.ext,14)}</a>`:`<button class="btn small" disabled>Lien HelloAsso à venir</button>`)
         :`<button class="btn small" data-book="${e.id}" ${left<=0?'disabled':''}>Réserver ma place</button>`}
-      </div>${mine?`<div style="padding:0 14px 12px;background:var(--bg)"><button class="del" data-cancel="${e.id}">Annuler ma réservation</button></div>`:''}</div>`;}).join('')||'<div class="empty">Aucune billetterie ouverte pour le moment.</div>'}</div>`;
+      </div>${mine||isBDE()?`<div style="padding:0 14px 12px;background:var(--bg);display:flex;gap:14px;flex-wrap:wrap">${mine?`<button class="del" data-cancel="${e.id}">Annuler ma réservation</button>`:''}${isBDE()?`<button class="del" data-editev="${e.id}">Modifier (BDE)</button><button class="del" data-delev="${e.id}">Supprimer</button>`:''}</div>`:''}</div>`;}).join('')||'<div class="empty">Aucune billetterie ouverte pour le moment.</div>'}</div>`;
   $$('[data-book]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.book);e.booking.going.push(me);save();render();toast('Place réservée pour « '+e.title+' »');});
   $$('[data-pay]').forEach(a=>a.addEventListener('click',()=>{const e=S.events.find(x=>x.id===a.dataset.pay);
     setTimeout(async()=>{if(await ask('Avez-vous finalisé votre paiement HelloAsso pour « '+e.title+' » ?')){e.booking.going.push(me);save();render();toast('Place réservée');}},600);}));
   $$('[data-cancel]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.cancel);e.booking.going=e.booking.going.filter(x=>x!==me);save();render();toast('Réservation annulée');});
+  $$('[data-editev]').forEach(b=>b.onclick=()=>editEvent(S.events.find(x=>x.id===b.dataset.editev)));
+  $$('[data-delev]').forEach(b=>b.onclick=()=>deleteEvent(S.events.find(x=>x.id===b.dataset.delev)));
   $$('[data-list]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.list);
     openSheet(`<h3>Inscrits – ${esc(e.title)}</h3><div class="list">${e.booking.going.map(id=>`<div class="card row">${avatar(person(id),'sm')}<div class="meta"><b>${esc(person(id).name)}</b></div></div>`).join('')||'<div class="empty">Aucun inscrit pour l\'instant.</div>'}</div>`);});
   if(ui.focus){const el=$('#t-'+ui.focus);if(el){el.scrollIntoView({block:'center'});el.style.boxShadow='0 0 0 3px var(--gold)';}ui.focus=null;}
@@ -894,8 +904,10 @@ function lightbox(a,i){
   const lb=$('#lightbox');lb.hidden=false;
   const draw=()=>{lb.innerHTML=`<img src="${esc(a.photos[i].src)}" alt=""><div style="display:flex;gap:12px;align-items:center">
     <button class="icon-btn" id="lp" ${i?'':'style="visibility:hidden"'}>${I.back}</button><span style="font-size:13px">${i+1} / ${a.photos.length}</span><button class="icon-btn" id="ln" ${i<a.photos.length-1?'':'style="visibility:hidden"'}>${I.next}</button></div>
-    <div style="display:flex;gap:10px"><a class="btn small gold" href="${esc(a.photos[i].src)}" download="MDAFC-${esc(a.title)}-${i+1}">Télécharger</a><button class="btn small ghost" id="lc">Fermer</button></div>`;
-    $('#lp').onclick=()=>{i--;draw();};$('#ln').onclick=()=>{i++;draw();};$('#lc').onclick=()=>{lb.hidden=true;};};
+    <div style="display:flex;gap:10px"><a class="btn small gold" href="${esc(a.photos[i].src)}" download="MDAFC-${esc(a.title)}-${i+1}">Télécharger</a><button class="btn small ghost" id="lc">Fermer</button>${isBDE()?'<button class="btn small ghost" id="ldel">Supprimer</button>':''}</div>`;
+    $('#lp').onclick=()=>{i--;draw();};$('#ln').onclick=()=>{i++;draw();};$('#lc').onclick=()=>{lb.hidden=true;};
+    if($('#ldel'))$('#ldel').onclick=async()=>{lb.hidden=true;if(!await ask('Retirer cette photo de l\'album « '+a.title+' » ?','Supprimer'))return;
+      a.photos.splice(i,1);save();render();toast('Photo retirée');};};
   draw();
 }
 function newAlbum(){
@@ -980,9 +992,13 @@ function editSubjects(promo,sem){
 }
 function fileRow(f){
   return `<button class="card folder file" data-file="${f.id}"><span class="ico">${f.url&&!f.data?'🔗':'📄'}</span><div style="flex:1;min-width:0"><b style="font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.title)}</b>
-    <div class="sub">${esc(f.kind)} · ${esc(f.subject)} · ${esc(f.year)}</div><div style="font-size:11.5px;color:var(--muted)">Partagé par ${esc(person(f.author).name)} · ${ago(f.t)}</div></div></button>`;
+    <div class="sub">${esc(f.kind)} · ${esc(f.subject)} · ${esc(f.year)}</div><div style="font-size:11.5px;color:var(--muted)">Partagé par ${esc(person(f.author).name)} · ${ago(f.t)}${isBDE()||isMine(f.author)?` · <span class="del" role="button" tabindex="0" data-delfile="${f.id}">supprimer</span>`:''}</div></div></button>`;
 }
-function bindFiles(){$$('[data-file]').forEach(b=>b.onclick=()=>openFile(S.files.find(f=>f.id===b.dataset.file)));}
+function bindFiles(){
+  $$('[data-file]').forEach(b=>b.onclick=ev=>{const d=ev.target.closest('[data-delfile]');const f=S.files.find(x=>x.id===b.dataset.file);if(!f)return;
+    if(d){ev.stopPropagation();(async()=>{if(!await ask('Supprimer le document « '+f.title+' » ?','Supprimer'))return;S.files=S.files.filter(x=>x.id!==f.id);save();render();toast('Document supprimé');})();return;}
+    openFile(f);});
+}
 function openFile(f){
   if(f.data){const a=document.createElement('a');a.href=f.data;a.download=f.fname||f.title;a.click();return;}
   if(f.url)window.open(f.url,'_blank','noopener');
@@ -1176,10 +1192,15 @@ $('#composer').onsubmit=e=>{e.preventDefault();const v=$('#msgInput').value.trim
 /* ================= Annuaire (étudiants + anciens) ================= */
 let ANC=null,ancLoading=false;
 const normName=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]+/g,' ').trim();
+// Nom qui désigne un membre du BDE : nom complet, ou prénom seul quand un seul membre le porte
+const BDE_KEYS=(()=>{const full=new Map(),first=new Map();
+  BDE_MEMBERS.forEach(m=>{full.set(normName(m.name),m);const f=normName(m.name.split(' ')[0]);first.set(f,first.has(f)?null:m);});
+  first.forEach((m,k)=>{if(m&&!full.has(k))full.set(k,m);});return full;})();
+const bdeByName=n=>BDE_KEYS.get(normName(n))||null;
 // Profils sans doublons : un même nom n'apparaît qu'une fois (le plus récent), et les membres du BDE restent dans leur propre liste
 function uniqueProfiles(){
-  const bde=new Set(BDE_MEMBERS.map(m=>normName(m.name))),best=new Map();
-  for(const [id,p] of Object.entries(S.profiles||{})){const k=normName(p.name);if(!k||bde.has(k))continue;
+  const best=new Map();
+  for(const [id,p] of Object.entries(S.profiles||{})){const k=normName(p.name);if(!k||bdeByName(p.name))continue;
     const cur=best.get(k);if(!cur||(p.at||0)>(cur.at||0))best.set(k,{...p,id});}
   return [...best.values()];
 }
@@ -1300,12 +1321,11 @@ async function drawCodes(){
     if(!$('#codesCard'))return;
     // Une inscription = un appareil. On regroupe par personne (même nom), on met à part les membres du BDE
     // et les anciens appareils dont le profil a disparu (souvent l'appareil d'un membre avant sa connexion BDE).
-    const bdeNames=new Set(BDE_MEMBERS.map(m=>normName(m.name)));
     const groups=new Map(),orphans=[],bdeRows=new Map();
     for(const x of studs){const pr=S.profiles[x.id];
       if(!pr){orphans.push(x);continue;}
-      const k=normName(pr.name);
-      if(bdeNames.has(k)){bdeRows.set(k,(bdeRows.get(k)||[]).concat(x));continue;}
+      const k=normName(pr.name),bm=bdeByName(pr.name);
+      if(bm){bdeRows.set(bm.name,(bdeRows.get(bm.name)||[]).concat(x));continue;}
       const g=groups.get(k)||{name:pr.name,rows:[]};g.rows.push(x);groups.set(k,g);}
     const people=[...groups.values()].map(g=>({...g,promo:g.rows.slice().sort((a,b)=>b.joined_at.localeCompare(a.joined_at))[0].promo,
       first:g.rows.map(r=>r.joined_at).sort()[0],ids:g.rows.map(r=>r.id)})).sort((a,b)=>a.promo.localeCompare(b.promo)||a.name.localeCompare(b.name,'fr'));
@@ -1324,12 +1344,15 @@ async function drawCodes(){
       const dev=k=>k>1?` · ${k} appareils`:'';
       openSheet(`<h3>Étudiants inscrits (${people.length})</h3><p class="sub" style="margin-bottom:10px">Une même personne entrée depuis plusieurs appareils (Safari, icône de l'écran d'accueil, ordinateur) n'apparaît qu'une fois. Retirer lui coupe l'accès sur tous ses appareils : pensez ensuite à changer le code de sa promo.</p>
         <div class="list">${people.map((x,i)=>`<div class="card row"><div class="meta"><b>${esc(x.name)}</b><span>${esc(x.promo)} · depuis le ${new Date(x.first).toLocaleDateString('fr-FR')}${dev(x.ids.length)}</span></div><button class="btn ghost small" data-mv="${i}">Promo</button><button class="btn ghost small" data-kick="${i}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>
-        ${bdeRows.size?`<div class="section-title">Membres du BDE</div><p class="sub" style="line-height:1.5">${[...bdeRows.keys()].map(k=>esc(BDE_MEMBERS.find(m=>normName(m.name)===k).name)).join(', ')} : entrés aussi avec un code de promo. Rien à faire, ils restent dans la liste du bureau.</p>`:''}
+        ${bdeRows.size?`<div class="section-title">Anciens appareils des membres du BDE</div><div class="card row"><div class="meta"><b>${[...bdeRows.keys()].map(esc).join(', ')}</b><span>Entrés avec un code de promo avant leur connexion BDE. Ce ne sont pas des étudiants : vous pouvez nettoyer, leur compte BDE n'est pas touché.</span></div><button class="btn ghost small" id="cleanBde">Nettoyer</button></div>`:''}
         ${orphans.length?`<div class="section-title">Anciens appareils sans profil</div><div class="card row"><div class="meta"><b>${orphans.length} ancienne${orphans.length>1?'s':''} session${orphans.length>1?'s':''}</b><span>Appareils dont le profil a été remplacé (par exemple avant une connexion BDE)</span></div><button class="btn ghost small" id="cleanOrph">Nettoyer</button></div>`:''}`);
       $$('[data-mv]').forEach(b=>b.onclick=async()=>{const x=people[+b.dataset.mv];const p=await choose('Nouvelle promo pour '+x.name+' :',PROMOS);if(!p)return;
         try{for(const id of x.ids)await Backend.setStudentPromo(id,p);toast(x.name+' est maintenant en '+p);closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
       $$('[data-kick]').forEach(b=>b.onclick=async()=>{const x=people[+b.dataset.kick];if(!await ask('Retirer '+x.name+" de l'application"+(x.ids.length>1?' (sur ses '+x.ids.length+' appareils)':'')+' ?','Retirer'))return;
         try{await removeAll(x.ids);toast('Accès retiré');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
+      if($('#cleanBde'))$('#cleanBde').onclick=async()=>{const ids=[...bdeRows.values()].flat().map(r=>r.id);
+        if(!await ask('Retirer ces '+ids.length+' anciens appareils ? Les comptes BDE restent actifs.','Nettoyer'))return;
+        try{await removeAll(ids);toast('Anciens appareils retirés');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}};
       if($('#cleanOrph'))$('#cleanOrph').onclick=async()=>{if(!await ask('Supprimer ces '+orphans.length+' anciennes sessions sans profil ?','Nettoyer'))return;
         try{await removeAll(orphans.map(o=>o.id));toast('Sessions nettoyées');closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}};
     };

@@ -114,6 +114,8 @@ window.Backend={
     S=state;SEED=seed;onChange=handlers.onChange||onChange;onError=handlers.onError||onError;
     if(MODE==='local'){status='local';return {uid:'me',member:null};}
     client=MODE==='mock'?MockSupabase():window.supabase.createClient(CFG.url,CFG.anonKey);
+    // « Se souvenir de moi » décoché : la session ne survit pas à la fermeture de l'application
+    try{if(localStorage.getItem('mdafc-remember')==='0'&&!sessionStorage.getItem('mdafc-alive')){await client.auth.signOut({scope:'local'});localStorage.removeItem('mdafc-remember');}}catch(e){}
     let {data:{session}}=await client.auth.getSession();
     if(!session){const r=await client.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session;}
     uid=session.user.id;
@@ -156,6 +158,8 @@ window.Backend={
   async listStudents(){const {data,error}=await client.from('students').select('id,promo,joined_at').order('joined_at',{ascending:false});if(error)throw error;return data;},
   async setStudentPromo(id,promo){const {error}=await client.rpc('set_student_promo',{p_id:id,p_promo:promo});if(error)throw new Error(error.message);if(profiles[id])profiles[id].promo=promo;onChange();},
   async removeStudent(id){let r=await client.from('students').delete().eq('id',id);if(r.error)throw r.error;r=await client.from('profiles').delete().eq('id',id);delete profiles[id];onChange();},
+  // Se souvenir de moi : la session reste enregistrée sur l'appareil (et on demande au navigateur de ne pas l'effacer)
+  remember(on){try{if(on){localStorage.setItem('mdafc-remember','1');navigator.storage?.persist?.();}else{localStorage.setItem('mdafc-remember','0');sessionStorage.setItem('mdafc-alive','1');}}catch(e){}},
   schedulePush(){if(MODE==='local')return;clearTimeout(timer);timer=setTimeout(()=>{timer=null;pushing=pushing.then(pushNow).then(()=>{if(pending){pending=false;unflatten();synced=snap(flatten(S));onChange();}}).catch(e=>onError(e));},250);},
   async flush(){clearTimeout(timer);timer=null;await (pushing=pushing.then(pushNow));},
   async saveProfile(me){if(MODE==='local'||!client)return;const {error}=await client.from('profiles').upsert({id:uid,name:me.name,promo:me.promo});if(error)onError(error);profiles[uid]={name:me.name,promo:me.promo};},
