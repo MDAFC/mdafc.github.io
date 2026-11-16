@@ -26,7 +26,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 /* pas de zoom au double-tap ni au pincement : l'app se comporte comme une application native */
-html,body,button,a,input,select,textarea,label{touch-action:manipulation}
+*{touch-action:manipulation}
 input,select,textarea{font-size:16px}
 body{font-family:Inter,system-ui,sans-serif;background:#E9DCCD;color:var(--text);display:flex;justify-content:center}
 button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -597,6 +597,7 @@ const PAGES={
   annuaire:['Annuaire','Étudiants & réseau des anciens'],
   sondages:['Sondages','Donnez votre avis au BDE'],
   questions:['Questions','Posez vos questions à l\'avance'],
+  suggestions:['Suggestions & bugs','Aidez-nous à améliorer l\'application'],
   stages:['Stages & alternances','Offres partagées par la communauté'],
   parrainage:['Parrainage','Parrains, marraines & filleuls'],
   bde:['Espace BDE','Réservé aux 7 membres du bureau'],
@@ -626,7 +627,7 @@ function render(){
     else go(parent);
   };
   const fab=$('#fab'); fab.hidden=true; fab.onclick=null;
-  ({home:vHome,agenda:vAgenda,billetterie:vBilletterie,drive:vDrive,messages:vMessages,photos:vPhotos,boutique:vBoutique,annuaire:vAnnuaire,sondages:vSondages,questions:vQuestions,stages:vStages,parrainage:vParrainage,bde:vBDE,profil:vProfil})[page]();
+  ({home:vHome,agenda:vAgenda,billetterie:vBilletterie,drive:vDrive,messages:vMessages,photos:vPhotos,boutique:vBoutique,annuaire:vAnnuaire,sondages:vSondages,questions:vQuestions,suggestions:vSuggestions,stages:vStages,parrainage:vParrainage,bde:vBDE,profil:vProfil})[page]();
 }
 function setFab(label,fn){const f=$('#fab');f.hidden=false;f.innerHTML=I.plus+esc(label);f.onclick=fn;}
 const bindGo=()=>$$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go,b.dataset.state?JSON.parse(b.dataset.state):{}));
@@ -688,7 +689,36 @@ function bindInstall(){
   if($('#installOff'))$('#installOff').onclick=()=>{try{localStorage.setItem('mdafc-install-off','1');}catch(e){}$('#installCard').remove();};
   if($('#doInstall'))$('#doInstall').onclick=async()=>{installEvt.prompt();await installEvt.userChoice;installEvt=null;render();};
 }
+// Boîte à suggestions : une boîte à questions dédiée, créée par le premier membre du BDE qui ouvre l'app
+function suggBoard(){let b=S.boards.find(x=>x.id==='qsugg');
+  if(!b&&isBDE()&&Backend.status!=='locked'){b={id:'qsugg',title:'Suggestions & bugs',desc:'',event:'',questions:[],author:myId(),t:Date.now()};S.boards.push(b);save();}
+  return b;}
+const SUGG_KINDS=[['bug','🐞 Bug'],['idee','💡 Idée'],['modif','✏️ À modifier']];
+function vSuggestions(){
+  const b=suggBoard(),me=myId(),f=ui.filter||'tout';
+  if(!b){$('#main').innerHTML='<div class="empty">La boîte à suggestions ouvre très bientôt.<br>En attendant, vous pouvez écrire au BDE depuis l\'accueil.</div>';return;}
+  const qs=b.questions.filter(q=>f==='tout'||(f==='fait'?q.done:(q.kind||'idee')===f&&!q.done)).sort((x,y)=>(x.done?1:0)-(y.done?1:0)||y.likes.length-x.likes.length||y.t-x.t);
+  const kind=k=>(SUGG_KINDS.find(x=>x[0]===k)||SUGG_KINDS[1])[1];
+  $('#main').innerHTML=`<div class="note">Un bug, une idée, quelque chose à changer ? Écrivez-le ici. Soutenez les propositions des autres avec ▲ : le BDE répond et indique ce qui est fait.</div>
+    <form class="card" id="sgF" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+      <div class="chips" style="margin:0">${SUGG_KINDS.map(([k,l],i)=>`<label class="chip ${i===1?'on':''}" style="cursor:pointer"><input type="radio" name="kind" value="${k}" ${i===1?'checked':''} hidden>${l}</label>`).join('')}</div>
+      <textarea class="input" name="q" rows="3" required placeholder="Ex. Le bouton « Retirer » ne marche pas sur iPhone / Ajouter un onglet pour…"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><label class="sub" style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="anon"> Anonyme</label><button class="btn small">Envoyer</button></div></form>
+    <div class="chips">${[['tout','Tout'],...SUGG_KINDS,['fait','✅ Fait']].map(([k,l])=>`<button class="chip ${k===f?'on':''}" data-sf="${k}">${l}</button>`).join('')}</div>
+    <div class="list">${qs.map(q=>`<div class="card q" style="${q.done?'opacity:.7':''}"><button class="vote ${q.likes.includes(me)?'on':''}" data-like="${q.id}" aria-label="Moi aussi">${small(I.up,16)}${q.likes.length}</button>
+      <div class="body"><span class="tag ${q.done?'green':''}" style="margin-bottom:4px">${q.done?'✅ Fait':kind(q.kind)}</span><div>${esc(q.text)}</div><small>${q.anon?'Anonyme':esc(person(q.author).name)} · ${ago(q.t)}${isBDE()?` · <button class="del" data-ans="${q.id}">${q.answer?'modifier la réponse':'répondre'}</button> · <button class="del" data-done="${q.id}">${q.done?'pas encore fait':'marquer comme fait'}</button>`:''}${isBDE()||isMine(q.author)?` · <button class="del" data-delq="${q.id}">supprimer</button>`:''}</small>
+      ${q.answer?`<div class="answer"><b>Réponse du BDE :</b> ${esc(q.answer)}</div>`:''}</div></div>`).join('')||'<div class="empty">Rien ici pour le moment.</div>'}</div>`;
+  $$('#sgF [name=kind]').forEach(r=>r.onchange=()=>$$('#sgF .chip').forEach(c=>c.classList.toggle('on',c.contains(r)&&r.checked||c.querySelector('input').checked)));
+  $('#sgF').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.target);
+    b.questions.push({id:uid('sg'),text:fd.get('q').trim(),kind:fd.get('kind')||'idee',anon:!!fd.get('anon'),author:me,likes:[],t:Date.now(),answer:''});save();ui.filter='tout';render();toast('Merci ! Le BDE a reçu votre message');};
+  $$('[data-sf]').forEach(x=>x.onclick=()=>{ui.filter=x.dataset.sf;render();});
+  $$('[data-like]').forEach(x=>x.onclick=()=>{const q=b.questions.find(y=>y.id===x.dataset.like);const i=q.likes.indexOf(me);i<0?q.likes.push(me):q.likes.splice(i,1);save();render();});
+  $$('[data-ans]').forEach(x=>x.onclick=async()=>{const q=b.questions.find(y=>y.id===x.dataset.ans);const a=await askText('Réponse du BDE :',q.answer||'');if(a!==null){q.answer=a.trim();save();render();}});
+  $$('[data-done]').forEach(x=>x.onclick=()=>{const q=b.questions.find(y=>y.id===x.dataset.done);q.done=!q.done;save();render();toast(q.done?'Marqué comme fait':'Remis en attente');});
+  $$('[data-delq]').forEach(x=>x.onclick=async()=>{if(!await ask('Supprimer ce message ?','Supprimer'))return;b.questions=b.questions.filter(y=>y.id!==x.dataset.delq);save();render();});
+}
 function vHome(){
+  if(isBDE())suggBoard();
   const rem=S.reminders.filter(r=>daysLeft(r.deadline)>=0).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,2);
   const next=S.events.filter(e=>forMe(e)&&evEnd(e)>=todayStr()).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
   const openPolls=S.polls.filter(p=>!p.closed&&!p.options.some(o=>o.votes.includes(myId()))).length;
@@ -703,6 +733,7 @@ function vHome(){
       ${isBDE()?`<button class="tile bde" data-go="bde"><span class="ico">🔐</span>Espace BDE${todoN?`<span class="pill" style="background:var(--gold);color:#3A220C">${todoN}</span>`:''}</button>`:''}
       <button class="tile" data-go="sondages"><span class="ico">📊</span>Sondages${openPolls?`<span class="pill">${openPolls}</span>`:''}</button>
       <button class="tile" data-go="questions"><span class="ico">🙋</span>Questions</button>
+      <button class="tile" data-go="suggestions"><span class="ico">💡</span>Suggestions &amp; bugs</button>
       <button class="tile" data-go="boutique"><span class="ico">🧥</span>Pulls &amp; merch</button>
       <button class="tile" data-go="photos"><span class="ico">📸</span>Photos de classe</button>
       <button class="tile" data-go="stages"><span class="ico">💼</span>Stages &amp; alternances</button>
@@ -1078,7 +1109,7 @@ function vQuestions(){
     return;
   }
   $('#main').innerHTML=`<div class="note">Posez vos questions avant une réunion ou un événement. Soutenez celles des autres avec ▲ : le BDE transmet les plus demandées aux intervenants.</div>
-    <div class="list">${[...S.boards].sort((a,b)=>b.t-a.t).map(b=>`<button class="card folder" data-board="${b.id}"><span class="ico">🙋</span><div style="flex:1;min-width:0"><b>${esc(b.title)}</b><div class="sub">${b.questions.length} question${b.questions.length>1?'s':''}</div></div>${chevron()}</button>`).join('')||'<div class="empty">Aucune boîte à questions ouverte.</div>'}</div>`;
+    <div class="list">${S.boards.filter(b=>b.id!=='qsugg').sort((a,b)=>b.t-a.t).map(b=>`<button class="card folder" data-board="${b.id}"><span class="ico">🙋</span><div style="flex:1;min-width:0"><b>${esc(b.title)}</b><div class="sub">${b.questions.length} question${b.questions.length>1?'s':''}</div></div>${chevron()}</button>`).join('')||'<div class="empty">Aucune boîte à questions ouverte.</div>'}</div>`;
   $$('[data-board]').forEach(x=>x.onclick=()=>go('questions',{board:x.dataset.board}));
   if(isBDE())setFab('Boîte',()=>{
     openSheet(`<h3>Nouvelle boîte à questions</h3><form id="f"><label class="field">Titre<input name="t" required placeholder="Réunion CRFPA – vos questions"></label>
@@ -1453,6 +1484,12 @@ if(window.MDAFC_CONFIG&&String(MDAFC_CONFIG.url).startsWith('mock')){const b=doc
   splash();
 })();
 </script>
-<script>['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));</script>
+<script>
+// Pas de zoom (pincement ou double-tap), sur toutes les pages
+['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+(()=>{let last=0;document.addEventListener('touchend',e=>{const now=Date.now();
+  if(now-last<350&&!e.target.closest('input,textarea,select,[contenteditable]')){e.preventDefault();e.target.closest('button,a,label,[data-ev],[data-day]')?.click();}
+  last=now;},{passive:false});})();
+</script>
 </body>
 </html>
