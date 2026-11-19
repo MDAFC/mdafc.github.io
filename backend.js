@@ -184,6 +184,12 @@ window.Backend={
     subscribe();status='online';onChange();return m;
   },
   async logoutBDE(){await client.auth.signOut();const a=await client.auth.signInAnonymously();uid=a.data.session.user.id;member=null;joined=false;return uid;},
+  // Notifications
+  async pushKey(){if(MODE!=='supabase')return null;if(this._pk)return this._pk;let {data}=await client.rpc('push_public_key');
+    if(!data){await fetch(CFG.url+'/functions/v1/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});({data}=await client.rpc('push_public_key'));}
+    return this._pk=data||null;},
+  async savePush(endpoint,p256dh,auth,msgs){const {error}=await client.rpc('save_push_sub',{p_endpoint:endpoint,p_p256dh:p256dh,p_auth:auth,p_msgs:msgs});if(error)throw new Error(error.message);},
+  async removePush(endpoint){await client.rpc('remove_push_sub',{p_endpoint:endpoint});},
   async changePassword(pw){const {error}=await client.auth.updateUser({password:pw});if(error)throw error;},
   async upload(blob,ext){
     if(MODE==='local')return null;

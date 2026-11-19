@@ -582,12 +582,12 @@ function codeGate(){
       $('#back').onclick=()=>{codeGate();$('#start').click();};
       $('#obB').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),btn=e.target.querySelector('.btn');btn.disabled=true;
         try{const mem=await Backend.loginBDE(f.get('email'),f.get('pw'),false);Backend.remember(!!f.get('remember'));const m=bdeMember(mem);
-          S.uid=Backend.uid;S.me={...(S.me||{interests:'',promo:PROMOS[0]}),id:S.uid,name:m.name,bde:mem};save();Backend.saveProfile(S.me);hideSplash();toast('Bienvenue, '+m.name.split(' ')[0]+' !');}
+          S.uid=Backend.uid;S.me={...(S.me||{interests:'',promo:PROMOS[0]}),id:S.uid,name:m.name,bde:mem};save();Backend.saveProfile(S.me);hideSplash();refreshPush();toast('Bienvenue, '+m.name.split(' ')[0]+' !');}
         catch(err){btn.disabled=false;toast(err.message);}};};
   };
 }
 let entered=false;
-function hideSplash(){entered=true;const s=$('#splash');s.classList.add('hide');go('home');setTimeout(()=>s.style.display='none',550);checkReminders();}
+function hideSplash(){entered=true;setTimeout(askPushOnce,1500);const s=$('#splash');s.classList.add('hide');go('home');setTimeout(()=>s.style.display='none',550);checkReminders();}
 
 /* ================= Navigation ================= */
 const TABS=[['home','Accueil',I.home],['agenda','Agenda',I.cal],['billetterie','Billetterie',I.ticket],['drive','Drive',I.drive],['messages','Messages',I.chat]];
@@ -678,6 +678,72 @@ function newReminder(){
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(entered&&S.me)render();});
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+/* ---------- Notifications sur le téléphone (rappels du BDE, messages) ---------- */
+const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const onIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(e=>console.warn(e));
+const b64u=s=>{const p='='.repeat((4-s.length%4)%4),r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(r,c=>c.charCodeAt(0));};
+const pushState=()=>!pushOK()?(onIOS()&&!isStandalone()?'install':'unsupported'):Notification.permission==='denied'?'denied':S.pushOn&&Notification.permission==='granted'?'on':'off';
+async function enablePush(msgs){
+  if(!pushOK()){toast(onIOS()&&!isStandalone()?"Sur iPhone, installez d'abord l'app sur l'écran d'accueil, puis ouvrez-la depuis l'icône MDAFC":"Les notifications ne sont pas disponibles sur ce navigateur");return false;}
+  let perm=Notification.permission;
+  try{if(perm==='default')perm=await Notification.requestPermission();}catch(e){}
+  if(perm!=='granted'){toast(perm==='denied'?'Notifications bloquées : autorisez-les pour MDAFC dans les réglages du téléphone':'Notifications non activées');render();return false;}
+  try{
+    const key=await Backend.pushKey();if(!key)throw new Error('service pas encore prêt, réessayez plus tard');
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(key)});
+    const j=sub.toJSON();await Backend.savePush(j.endpoint,j.keys.p256dh,j.keys.auth,msgs!==false);
+    S.pushOn=true;S.pushMsgs=msgs!==false;localSave();render();toast('Notifications activées 🔔');return true;
+  }catch(e){toast('Activation impossible : '+(e.message||e));return false;}
+}
+async function disablePush(){
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+    if(sub){await Backend.removePush(sub.endpoint).catch(()=>{});await sub.unsubscribe();}}catch(e){}
+  S.pushOn=false;localSave();render();toast('Notifications désactivées');
+}
+// Au démarrage (et après une connexion BDE) : rattache l'abonnement au bon compte
+async function refreshPush(){
+  if(!S.pushOn||!pushOK()||Notification.permission!=='granted'||Backend.mode==='local')return;
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+    if(!sub){S.pushOn=false;localSave();return;}
+    const j=sub.toJSON();await Backend.savePush(j.endpoint,j.keys.p256dh,j.keys.auth,S.pushMsgs!==false);}catch(e){console.warn(e);}
+}
+// Une fois par appareil, à l'ouverture : propose d'activer les notifications (élèves déjà inscrits compris)
+async function askPushOnce(){
+  if(Backend.mode==='local'||Backend.status!=='online'||pushState()!=='off')return;
+  let asked=false;try{asked=localStorage.getItem('mdafc-push-asked')==='1';}catch(e){}
+  if(asked)return;
+  // on ne demande que si le service d'envoi est en place
+  let key=null;try{key=await Backend.pushKey();}catch(e){}
+  if(!key||$('#sheet').classList.contains('show'))return;
+  try{localStorage.setItem('mdafc-push-asked','1');}catch(e){}
+  openSheet(`<div style="text-align:center;font-size:44px;line-height:1;margin:6px 0 8px">🔔</div>
+    <h3 style="text-align:center">Activez les notifications</h3>
+    <p class="sub" style="text-align:center;line-height:1.5;margin:6px 0 16px">Soyez prévenu(e) des rappels de paiement du BDE et des nouveaux messages, même quand l'application est fermée.</p>
+    <button class="btn block" id="pushAsk">Activer les notifications</button>
+    <button class="btn ghost block small" id="pushLater" style="margin-top:8px">Plus tard</button>
+    <p class="sub" style="text-align:center;font-size:12px;margin-top:10px">Vous pourrez les activer ou les couper à tout moment dans Mon profil.</p>`);
+  // le clic déclenche directement la demande d'autorisation (obligatoire sur iPhone)
+  $('#pushAsk').onclick=()=>{closeSheet();enablePush(true);};
+  $('#pushLater').onclick=closeSheet;
+}
+function pushCard(){
+  if(Backend.mode==='local'||Backend.status!=='online')return '';
+  const st=pushState();let off=false;try{off=localStorage.getItem('mdafc-push-off')==='1';}catch(e){}
+  if(st==='on'||st==='unsupported'||off)return '';
+  const body=st==='install'?"Sur iPhone, les notifications marchent une fois l'app installée sur l'écran d'accueil (voir ci-dessus). Ouvrez-la ensuite depuis l'icône et activez-les ici."
+    :st==='denied'?"Elles sont bloquées sur cet appareil : autorisez-les pour MDAFC dans les réglages du téléphone (Réglages → Notifications)."
+    :`Rappels de paiement du BDE et nouveaux messages des chats.<div style="margin-top:8px"><button class="btn small" id="pushGo">Activer les notifications</button></div>`;
+  return `<div class="card" id="pushCard" style="display:flex;gap:12px;align-items:flex-start;border:1px solid var(--gold)">
+    <span style="font-size:28px;line-height:1">🔔</span>
+    <div style="flex:1;font-size:13.5px;line-height:1.5"><b>Recevez les notifications</b><br>${body}</div>
+    <button id="pushOff" aria-label="Masquer" style="font-size:18px;color:var(--muted);padding:0 4px">×</button></div>`;
+}
+function bindPushCard(){
+  if($('#pushGo'))$('#pushGo').onclick=()=>enablePush(true);
+  if($('#pushOff'))$('#pushOff').onclick=()=>{try{localStorage.setItem('mdafc-push-off','1');}catch(e){}$('#pushCard').remove();};
+}
 function installCard(){
   let off=false;try{off=localStorage.getItem('mdafc-install-off')==='1';}catch(e){}
   if(isStandalone()||off)return '';
@@ -691,6 +757,7 @@ function installCard(){
     <button id="installOff" aria-label="Masquer" style="font-size:18px;color:var(--muted);padding:0 4px">×</button></div>`;
 }
 function bindInstall(){
+  bindPushCard();
   if($('#installOff'))$('#installOff').onclick=()=>{try{localStorage.setItem('mdafc-install-off','1');}catch(e){}$('#installCard').remove();};
   if($('#doInstall'))$('#doInstall').onclick=async()=>{installEvt.prompt();await installEvt.userChoice;installEvt=null;render();};
 }
@@ -732,7 +799,7 @@ function vHome(){
   const todoN=S.todos.filter(t=>!t.done).length;
   const h=new Date().getHours();
   $('#main').innerHTML=`<div class="hello"><h3>${h<18?'Bonjour':'Bonsoir'} ${esc(S.me.name.split(' ')[0])} !</h3><p>${esc(S.me.promo)} · Magistère Droit des Affaires, Fiscalité &amp; Comptabilité</p></div>
-    ${installCard()}
+    ${installCard()}${pushCard()}
     <div class="section-title">Rappels du BDE <button data-go="agenda">Tout voir</button></div>
     <div class="list">${rem.map(reminderCard).join('')||'<div class="empty">Aucun rappel en cours.</div>'}</div>
     <div class="section-title">Raccourcis</div>
@@ -1084,13 +1151,19 @@ function pollCard(p){
     ${p.options.map((o,i)=>{const pct=total?Math.round(o.votes.length/total*100):0;const mine=o.votes.includes(me);
       return `<button class="opt ${mine?'mine':''}" data-vote="${p.id}|${i}" ${p.closed?'disabled':''}>${show?`<i class="bar" style="width:${pct}%"></i>`:''}<span><span>${mine?'✓ ':''}${esc(o.text)}</span>${show?`<b>${pct} %</b>`:''}</span></button>`;}).join('')}
     <div class="sub" style="display:flex;justify-content:space-between;margin-top:4px"><span>${total} vote${total>1?'s':''}${voted&&!p.closed?' · touchez une autre réponse pour changer':''}</span>
-    ${isBDE()?`<span><button class="del" data-close="${p.id}">${p.closed?'rouvrir':'clôturer'}</button> · <button class="del" data-delpoll="${p.id}">supprimer</button></span>`:''}</div></div>`;
+    ${isBDE()?`<span><button class="del" data-who="${p.id}">répondants</button> · <button class="del" data-close="${p.id}">${p.closed?'rouvrir':'clôturer'}</button> · <button class="del" data-delpoll="${p.id}">supprimer</button></span>`:''}</div></div>`;
 }
 function vSondages(){
   const list=[...S.polls].sort((a,b)=>(a.closed-b.closed)||b.t-a.t);
   $('#main').innerHTML=`<div class="list">${list.map(pollCard).join('')||'<div class="empty">Aucun sondage pour le moment.</div>'}</div>`;
   $$('[data-vote]').forEach(b=>b.onclick=()=>{const[id,i]=b.dataset.vote.split('|');const p=S.polls.find(x=>x.id===id),me=myId();
     p.options.forEach(o=>o.votes=o.votes.filter(v=>v!==me));p.options[+i].votes.push(me);save();render();});
+  // Répondants : visibles uniquement par le BDE
+  $$('[data-who]').forEach(b=>b.onclick=()=>{const p=S.polls.find(x=>x.id===b.dataset.who);if(!p||!isBDE())return;
+    const total=p.options.reduce((a,o)=>a+o.votes.length,0);
+    openSheet(`<h3>${esc(p.question)}</h3><p class="sub" style="margin-bottom:10px">${total} répondant${total>1?'s':''} · visible uniquement par le BDE</p>
+      ${p.options.map(o=>`<div class="section-title">${esc(o.text)} <span style="font-weight:600;color:var(--muted)">${o.votes.length}</span></div>
+        <div class="list">${o.votes.map(id=>person(id)).sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(x=>`<div class="card row">${avatar(x,'sm')}<div class="meta"><b>${esc(x.name)}</b>${x.promo?`<span>${esc(x.promo)}</span>`:''}</div></div>`).join('')||'<div class="sub">Personne</div>'}</div>`).join('')}`);});
   $$('[data-close]').forEach(b=>b.onclick=()=>{const p=S.polls.find(x=>x.id===b.dataset.close);p.closed=!p.closed;save();render();});
   $$('[data-delpoll]').forEach(b=>b.onclick=async()=>{if(!await ask('Supprimer ce sondage ?'))return;S.polls=S.polls.filter(x=>x.id!==b.dataset.delpoll);save();render();});
   if(isBDE())setFab('Sondage',newPoll);
@@ -1456,9 +1529,19 @@ function vProfil(){
          <select class="input" name="who" required><option value="">Je suis…</option>${BDE_MEMBERS.map(x=>`<option value="${x.id}">${esc(x.name)} – ${esc(x.role)}</option>`).join('')}</select>
          <div style="display:flex;gap:8px"><input class="input" type="password" name="pw" required placeholder="Mot de passe BDE" autocomplete="current-password" style="flex:1;min-width:0"><button class="btn small">Connexion</button></div></form>`}</div>
    <div class="section-title">Notifications</div>
-   <div class="card" style="font-size:13.5px;line-height:1.5;color:var(--muted)">Activez la cloche 🔔 sur un rappel pour être notifié(e) à J-7, J-3, J-1 et le jour J.<br>État : <b id="nstate" style="color:var(--text)"></b></div>
+   <div class="card" style="font-size:13.5px;line-height:1.5;color:var(--muted)">${(()=>{const st=pushState();
+     if(st==='on')return `<b style="color:var(--text)">✅ Notifications activées sur cet appareil</b><br>Vous êtes prévenu(e) des rappels du BDE${S.pushMsgs!==false?' et des nouveaux messages':''}.
+       <label style="display:flex;gap:8px;align-items:center;margin:10px 0;color:var(--text)"><input type="checkbox" id="pushMsgs" ${S.pushMsgs!==false?'checked':''} style="width:18px;height:18px;accent-color:var(--red)"> Aussi les messages (chats de ma promo, Général, messages privés)</label>
+       <button class="btn ghost small" id="pushStop">Désactiver</button>`;
+     if(st==='install')return "Sur iPhone, installez d'abord l'app sur l'écran d'accueil (Safari → Partager → « Sur l'écran d'accueil »), ouvrez-la depuis l'icône, puis revenez ici.";
+     if(st==='denied')return 'Notifications bloquées sur cet appareil : autorisez-les pour MDAFC dans les réglages du téléphone, puis revenez ici.';
+     if(st==='unsupported')return 'Ce navigateur ne permet pas les notifications.';
+     return `Recevez les rappels de paiement du BDE et les nouveaux messages, même quand l'app est fermée.<button class="btn block small" id="pushStart" style="margin-top:10px">🔔 Activer les notifications</button>`;})()}
+     <br><span style="font-size:12.5px">La cloche 🔔 d'un rappel ajoute aussi une alerte à J-7, J-3, J-1 et le jour J.</span></div>
    <button class="btn ghost block" id="reset" style="margin-top:18px">Réinitialiser la démo</button>`;
-  $('#nstate').textContent=!('Notification' in window)?'non pris en charge sur ce navigateur':Notification.permission==='granted'?'autorisées':Notification.permission==='denied'?'bloquées':'pas encore demandées';
+  if($('#pushStart'))$('#pushStart').onclick=()=>enablePush(true);
+  if($('#pushStop'))$('#pushStop').onclick=disablePush;
+  if($('#pushMsgs'))$('#pushMsgs').onchange=e=>enablePush(e.target.checked);
   bindGo();
   $('#pf').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);Object.assign(me,{name:f.get('name').trim(),promo:f.get('promo')||me.promo,interests:f.get('interests').trim()});save();Backend.saveProfile(me);render();toast('Profil mis à jour');};
   if($('#bdeMode'))$('#bdeMode').onclick=()=>{const F=$('#bdeF'),c=F.dataset.mode!=='create';F.dataset.mode=c?'create':'login';
@@ -1516,6 +1599,7 @@ if(window.MDAFC_CONFIG&&String(MDAFC_CONFIG.url).startsWith('mock')){const b=doc
       localSave();
       if(r.bdeRefused)setTimeout(()=>toast('Cette adresse n\'est pas enregistrée comme membre du BDE'),1200);
       else if(r.member)setTimeout(()=>toast('Connecté(e) au BDE : '+bdeMember(r.member).name),1200);
+      if(r.joined)refreshPush();
     }
   }catch(e){console.warn(e);toast('Hors ligne : affichage des dernières données enregistrées');}
   splash();
