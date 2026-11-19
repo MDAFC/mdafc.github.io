@@ -1289,31 +1289,12 @@ function vParrainage(){
   const rows=parrains.filter(n=>!q||n.toLowerCase().includes(q)||S.pairs.some(p=>p.parrain===n&&p.filleul.toLowerCase().includes(q)));
   $('#main').innerHTML=`${mine.length?`<div class="card" style="margin-bottom:12px;border-left:4px solid var(--gold)"><div class="section-title" style="margin:0 0 8px">Mon parrainage</div>${mine.map(p=>`<div style="font-size:14.5px;line-height:1.6">${p.parrain.toLowerCase()===me?`Votre filleul(e) : <b>${esc(p.filleul)}</b>`:`Votre parrain / marraine : <b>${esc(p.parrain)}</b>`}</div>`).join('')}</div>`:''}
     <label class="search">${I.search}<input id="pq" placeholder="Trouver un parrain, une marraine, un filleul…" value="${esc(ui.q||'')}"></label>
-    ${isBDE()?`<button class="btn gold block small" id="autoPair" style="margin-bottom:6px">🎲 Attribuer automatiquement les filleul(e)s</button>`:''}
     <div class="section-title">${parrains.length} parrains & marraines · ${S.pairs.length} binôme${S.pairs.length>1?'s':''}</div>
     <div class="list">${rows.map(n=>{const fs=S.pairs.filter(p=>p.parrain===n);
       return `<div class="card row">${avatar({name:n},'sm')}<div class="meta"><b>${esc(n)}</b><span>${fs.length?'Filleul(e) : '+fs.map(p=>esc(p.filleul)).join(', '):'<i>Filleul(e) à attribuer</i>'}</span></div>${isBDE()?`<button class="link" data-pair="${esc(n)}">${fs.length?'Modifier':'Attribuer'}</button>`:''}</div>`;}).join('')||'<div class="empty">Aucun résultat.</div>'}</div>`;
   const qi=$('#pq');qi.oninput=()=>{ui.q=qi.value;const pos=qi.selectionStart;vParrainage();const n=$('#pq');n.focus({preventScroll:true});n.setSelectionRange(pos,pos);};
   $$('[data-pair]').forEach(b=>b.onclick=()=>editPair(b.dataset.pair));
-  if($('#autoPair'))$('#autoPair').onclick=autoPairs;
   if(isBDE())setFab('Binôme',()=>editPair(''));
-}
-// Tirage automatique : chaque Mag 1 inscrit dans l'app sans parrain reçoit un parrain / une marraine de la liste,
-// en équilibrant (d'abord ceux qui n'ont pas encore de filleul). Aperçu avant d'enregistrer ; les binômes existants sont gardés.
-function autoPairs(){
-  const k=normName,done=new Set(S.pairs.map(x=>k(x.filleul))),par=new Set(PARRAINS.map(k));
-  const fil=uniqueProfiles().filter(x=>x.promo==='Mag 1'&&!done.has(k(x.name))&&!par.has(k(x.name))).map(x=>x.name);
-  if(!fil.length){toast(S.pairs.length?'Tous les Mag 1 inscrits ont déjà un parrain ou une marraine':'Aucun étudiant de Mag 1 inscrit dans l\'app pour le moment');return;}
-  const draw=()=>{const cnt=new Map(PARRAINS.map(n=>[n,S.pairs.filter(x=>k(x.parrain)===k(n)).length]));
-    const f=[...fil].sort(()=>Math.random()-.5);
-    return f.map(name=>{const min=Math.min(...cnt.values()),c=[...cnt].filter(([,v])=>v===min).map(([n])=>n),pn=c[Math.floor(Math.random()*c.length)];cnt.set(pn,cnt.get(pn)+1);return {parrain:pn,filleul:name};});};
-  let res=draw();
-  const show=()=>{openSheet(`<h3>Tirage des binômes</h3><p class="sub" style="line-height:1.5;margin-bottom:10px">${fil.length} étudiant${fil.length>1?'s':''} de Mag 1 inscrit${fil.length>1?'s':''} sans parrain, répartis entre les ${PARRAINS.length} parrains et marraines. Rien n'est enregistré avant « Valider ».</p>
-    <div class="list">${res.slice().sort((a,b)=>a.parrain.localeCompare(b.parrain,'fr')).map(x=>`<div class="card row"><div class="meta"><b>${esc(x.parrain)}</b><span>→ ${esc(x.filleul)}</span></div></div>`).join('')}</div>
-    <div style="display:flex;gap:8px;margin-top:14px"><button class="btn ghost small" id="apRe" style="flex:1">🎲 Refaire le tirage</button><button class="btn small" id="apOk" style="flex:1">Valider</button></div>`);
-    $('#apRe').onclick=()=>{res=draw();show();};
-    $('#apOk').onclick=()=>{S.pairs.push(...res);save();closeSheet();render();toast(res.length+' binôme'+(res.length>1?'s':'')+' enregistré'+(res.length>1?'s':''));};};
-  show();
 }
 function editPair(parrain){
   const cur=S.pairs.filter(p=>p.parrain===parrain).map(p=>p.filleul).join(', ');
