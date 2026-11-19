@@ -1048,18 +1048,32 @@ function uploadFile(promo,subject,kind){
   openSheet(`<h3>Partager un document</h3><form id="f">
     <div class="note" style="margin:0">${esc(promo)} · ${esc(subject)}</div>
     <label class="field">Type<select name="kind">${KINDS.map(([k])=>`<option ${k===kind?'selected':''}>${k}</option>`).join('')}</select></label>
-    <label class="field">Titre<input name="title" required placeholder="Ex. Examen janvier 2025 + corrigé"></label>
+    <label class="field">Fichiers (PDF, Word, image…) : vous pouvez en choisir plusieurs<input type="file" name="file" multiple id="upFiles"></label>
+    <label class="field" id="upTitle">Titre<input name="title" placeholder="Ex. Examen janvier 2025 + corrigé"><small class="sub" id="upHint" hidden>Plusieurs fichiers : chacun garde son nom de fichier comme titre.</small></label>
     <label class="field">Année universitaire<input name="year" required value="2025-2026"></label>
-    <label class="field">Fichier (PDF, Word, image…)<input type="file" name="file"></label>
     <label class="field">…ou lien (Google Drive, OneDrive…)<input type="url" name="url" placeholder="https://drive.google.com/…"></label>
     <button class="btn block">Partager avec les promos</button></form>`);
-  $('#f').onsubmit=async ev=>{ev.preventDefault();const fd=new FormData(ev.target);const file=fd.get('file'),url=fd.get('url').trim();
-    if(!(file&&file.size)&&!url){toast('Ajoutez un fichier ou un lien');return;}
-    let data='';let link=url;if(file&&file.size){
-      if(Backend.mode!=='local'){if(file.size>25e6){toast('Fichier limité à 25 Mo. Utilisez plutôt un lien.');return;}toast('Envoi du fichier…');try{link=await Backend.upload(file,(file.name.split('.').pop()||'bin').toLowerCase());}catch(err){toast('Échec de l\'envoi : '+err.message);return;}}
-      else{if(file.size>1.5e6){toast('Démo : fichier limité à 1,5 Mo. Utilisez plutôt un lien.');return;}data=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file);});}}
-    S.files.push({id:uid('f'),promo,subject,kind:fd.get('kind'),title:fd.get('title').trim(),fname:file&&file.size?file.name:'',year:fd.get('year').trim(),url:link,data,author:myId(),t:Date.now()});
-    if(save()){closeSheet();ui.kind=fd.get('kind');render();toast('Document partagé');}else S.files.pop();};
+  $('#upFiles').onchange=e=>{const n=e.target.files.length;$('#upHint').hidden=n<2;$('#upTitle input').placeholder=n>1?'Facultatif : préfixe commun (ex. Examens 2025)':'Ex. Examen janvier 2025 + corrigé';};
+  $('#f').onsubmit=async ev=>{ev.preventDefault();const fd=new FormData(ev.target);const files=fd.getAll('file').filter(f=>f&&f.size),url=fd.get('url').trim(),title=fd.get('title').trim();
+    if(!files.length&&!url){toast('Ajoutez un fichier ou un lien');return;}
+    if(files.length<2&&!title){toast('Donnez un titre au document');return;}
+    const lim=Backend.mode==='local'?1.5e6:25e6,big=files.filter(f=>f.size>lim);
+    if(big.length){toast((big.length>1?big.length+' fichiers dépassent':'« '+big[0].name+' » dépasse')+' la limite de '+(lim/1e6)+' Mo. Utilisez plutôt un lien.');return;}
+    const btn=ev.target.querySelector('.btn');btn.disabled=true;
+    const base={promo,subject,kind:fd.get('kind'),year:fd.get('year').trim(),author:myId()},added=[];
+    const name=f=>f.name.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').trim();
+    try{
+      for(const [i,file] of files.entries()){
+        btn.textContent='Envoi '+(i+1)+' / '+files.length+'…';
+        let data='',link='';
+        if(Backend.mode!=='local')link=await Backend.upload(file,(file.name.split('.').pop()||'bin').toLowerCase());
+        else data=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file);});
+        added.push({...base,id:uid('f'),title:files.length>1?(title?title+' – ':'')+name(file):title,fname:file.name,url:link,data,t:Date.now()+i});}
+      if(url)added.push({...base,id:uid('f'),title:title||url,fname:'',url,data:'',t:Date.now()+files.length});
+    }catch(err){toast('Échec de l\'envoi'+(added.length?' après '+added.length+' fichier(s)':'')+' : '+(err.message||err));}
+    if(!added.length){btn.disabled=false;btn.textContent='Partager avec les promos';return;}
+    S.files.push(...added);
+    if(save()){closeSheet();ui.kind=fd.get('kind');render();toast(added.length>1?added.length+' documents partagés':'Document partagé');}else S.files.splice(-added.length);};
 }
 
 /* ================= Sondages ================= */
@@ -1207,10 +1221,26 @@ function openChat(id){
   $('#chatHeader').innerHTML=`<button class="icon-btn" id="back" aria-label="Retour">${I.back}</button>
     <div class="badge" style="background:${current.color};font-size:20px">${current.emoji}</div>
     <h2>${esc(current.name)}<small>${esc(current.desc)}</small></h2>`;
-  $('#back').onclick=()=>{$('#chat').classList.remove('open');current=null;render();};
+  // Flèche retour : réagit dès le toucher (sur iPhone, le premier toucher servait seulement à fermer le clavier)
+  const bk=$('#back');let done=false;
+  const leave=e=>{e.preventDefault();if(done)return;done=true;if(history.state?.chat)history.back();else closeChat();};
+  bk.addEventListener('pointerdown',leave);bk.addEventListener('click',leave);
   drawMessages();$('#chat').classList.add('open');S.read[id]=Date.now();save();
-  setTimeout(()=>$('#msgInput').focus({preventScroll:true}),320);
+  // geste « retour » du téléphone (balayage, bouton Android) : ferme la conversation au lieu de quitter l'app
+  if(!history.state?.chat)history.pushState({chat:1},'');
+  // pas de clavier qui s'ouvre tout seul sur téléphone : il masquait la flèche retour
+  if(!matchMedia('(pointer:coarse)').matches)setTimeout(()=>$('#msgInput').focus({preventScroll:true}),320);
 }
+function closeChat(){
+  $('#msgInput').blur();$('#chat').classList.remove('open');current=null;
+  window.scrollTo(0,0);render();
+}
+addEventListener('popstate',()=>{if($('#chat').classList.contains('open'))closeChat();});
+// Clavier ouvert sur téléphone : la conversation reste à la taille de l'écran visible (en-tête et flèche toujours visibles)
+if(window.visualViewport){const vv=visualViewport,fit=()=>{const c=$('#chat');if(!c)return;
+  if(innerWidth>=900||!c.classList.contains('open')){c.style.height='';c.style.top='';c.style.bottom='';return;}
+  c.style.top=vv.offsetTop+'px';c.style.height=vv.height+'px';c.style.bottom='auto';};
+  vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);}
 function drawMessages(){
   let lastDay='';
   $('#messages').innerHTML=current.msgs.map(m=>{const day=new Date(m.t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
