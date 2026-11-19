@@ -382,6 +382,11 @@ const CATS={
   deadline:{label:'Échéance',color:'#B5545F'}
 };
 const F='Fac',M='Magistère';
+// Mag 1 · S2 (liste donnée par le BDE, novembre 2026)
+const SUBJECTS_S2_MAG1=[
+  {n:'Droit du travail',t:F,d:''},{n:'Droit des sociétés',t:F,d:''},{n:'Droit fiscal',t:F,d:''},{n:'Droit des sûretés',t:F,d:''},{n:'RGO',t:F,d:''},
+  {n:'Comptabilité',t:M,d:''},{n:'Anglais',t:M,d:''},{n:'Fiscalité personnelle',t:M,d:''},{n:'Procédures fiscales contentieuses',t:M,d:''},{n:'Droit de la concurrence',t:M,d:''},{n:'Droit civil approfondi',t:M,d:''}
+];
 const SUBJECTS_S1={
   'Mag 1':[
     {n:'Droit du travail',t:F,d:'CM'},{n:'Droit de l\'Union européenne : le marché',t:F,d:'CM'},{n:'Droit commercial',t:F,d:'CM + TD'},
@@ -415,7 +420,7 @@ function placeholderPhoto(title,sub,hue){
 }
 const SEED={
   me:null, bdeHash:DEFAULT_BDE_HASH, semester:'S1',
-  subjects:{'Mag 1':{S1:SUBJECTS_S1['Mag 1'],S2:[]},'Mag 2':{S1:SUBJECTS_S1['Mag 2'],S2:[]},'Mag 3':{S1:SUBJECTS_S1['Mag 3'],S2:[]}},
+  subjects:{'Mag 1':{S1:SUBJECTS_S1['Mag 1'],S2:SUBJECTS_S2_MAG1},'Mag 2':{S1:SUBJECTS_S1['Mag 2'],S2:[]},'Mag 3':{S1:SUBJECTS_S1['Mag 3'],S2:[]}},
   dms:[],
   channels:[
     {id:'c1',name:'Général',emoji:'🏛️',color:'#5A1220',desc:'Mag 1 · Mag 2 · Mag 3',msgs:[{from:'sys',text:'Bienvenue sur MDAFC ! Toutes les infos du Magistère passent désormais ici 🎉',t:T0-2*H}]},
@@ -718,7 +723,9 @@ function vSuggestions(){
   $$('[data-delq]').forEach(x=>x.onclick=async()=>{if(!await ask('Supprimer ce message ?','Supprimer'))return;b.questions=b.questions.filter(y=>y.id!==x.dataset.delq);save();render();});
 }
 function vHome(){
-  if(isBDE())suggBoard();
+  if(isBDE()){suggBoard();
+    // Matières Mag 1 · S2 : ajoutées une fois dans la base partagée par le premier membre du BDE qui ouvre l'app
+    if(Backend.status!=='locked'&&S.subjects?.['Mag 1']&&!(S.subjects['Mag 1'].S2||[]).length){S.subjects['Mag 1'].S2=structuredClone(SUBJECTS_S2_MAG1);save();}}
   const rem=S.reminders.filter(r=>daysLeft(r.deadline)>=0).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,2);
   const next=S.events.filter(e=>forMe(e)&&evEnd(e)>=todayStr()).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
   const openPolls=S.polls.filter(p=>!p.closed&&!p.options.some(o=>o.votes.includes(myId()))).length;
