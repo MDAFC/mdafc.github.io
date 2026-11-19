@@ -816,8 +816,30 @@ function seedOffers(){
   if(add.length)save();
   try{localStorage.setItem('mdafc-offers-nov26','1');}catch(e){}
 }
+// Binômes officiels de la soirée parrainage (feuille Google du BDE, novembre 2026)
+const OFFICIAL_PAIRS=[
+  ['Clémence Aillaud','Aislinn de Brun'],['Chiara Audibert','Anna'],['Lou Bianchi','Chiara Campi'],['Erine Bigel','Ambre Alcaraz'],
+  ['Noélie Boquillod',"Aby Louise d'Agaro"],['Sterenn Brun','Raphael Fournier'],['Emma Buston','Nina Sabah'],['Anaë Camus','Emma Monzaugue'],
+  ['Baptistine Catta','Laure Masse'],['Valentine Chabaud','Élea François-Pavard'],['Clément Chapus','Régis Parichault'],['Feyrielle Chelouah','Mahé Hocquet'],
+  ['Kaena Daphne-Hediger','Isaure Guerin'],['Adèle Dauriac','Gabriel Candusso'],['Tom Dauvergne','Paul Magnan'],['Émeraude Etoundi','Lucie'],
+  ['Charlotte Fontaine','Charlène'],['Lise Hakikian','Charlotte Pantanella'],['Lise Hakikian','Tayanna'],['Eva Juan','Evan Estrayer'],
+  ['Zoé Laine','Charline'],['Augustin Le Carour','Clément Negre'],['Maël Le Tallec','Yvan Caporgno'],['Alizée Lugowski','Syrine'],
+  ['Lola Manenti','Manon Poupkoff'],['Sacha Méjean','Maissane'],['Camille Piazza','Chloé'],['Jean-Baptiste Veit-Harter','Oscar de Barbarin']
+];
+// Enregistrées une fois par le premier membre du BDE qui ouvre l'app : elles remplacent les binômes de ces parrains.
+// Un filleul noté par son seul prénom est complété avec le nom de l'élève de Mag 1 inscrit, s'il est le seul à porter ce prénom.
+function seedPairs(){
+  try{if(localStorage.getItem('mdafc-pairs-official')==='1')return;}catch(e){}
+  if(Backend.status==='locked')return;
+  const k=normName,mag1=uniqueProfiles().filter(x=>x.promo==='Mag 1');
+  const full=n=>{if(n.includes(' '))return n;const m=mag1.filter(x=>k(x.name).split(' ')[0]===k(n));return m.length===1?m[0].name:n;};
+  const par=new Set(OFFICIAL_PAIRS.map(([a])=>k(a)));
+  S.pairs=S.pairs.filter(x=>!par.has(k(x.parrain))).concat(OFFICIAL_PAIRS.map(([a,b])=>({parrain:a,filleul:full(b)})));
+  save();
+  try{localStorage.setItem('mdafc-pairs-official','1');}catch(e){}
+}
 function vHome(){
-  if(isBDE()){suggBoard();seedOffers();
+  if(isBDE()){suggBoard();seedOffers();seedPairs();
     // Matières Mag 1 · S2 : ajoutées une fois dans la base partagée par le premier membre du BDE qui ouvre l'app
     if(Backend.status!=='locked'&&S.subjects?.['Mag 1']&&!(S.subjects['Mag 1'].S2||[]).length){S.subjects['Mag 1'].S2=structuredClone(SUBJECTS_S2_MAG1);save();}}
   const rem=S.reminders.filter(r=>daysLeft(r.deadline)>=0).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,2);
@@ -1284,10 +1306,10 @@ function vStages(){
 /* ================= Parrainage ================= */
 function vParrainage(){
   const q=(ui.q||'').toLowerCase(),me=S.me.name.toLowerCase();
-  const mine=S.pairs.filter(p=>p.parrain.toLowerCase()===me||p.filleul.toLowerCase()===me);
+  const nm=normName(S.me.name),mine=S.pairs.filter(p=>normName(p.parrain)===nm||normName(p.filleul)===nm);
   const parrains=[...new Set([...PARRAINS,...S.pairs.map(p=>p.parrain)])].sort((a,b)=>a.localeCompare(b,'fr'));
   const rows=parrains.filter(n=>!q||n.toLowerCase().includes(q)||S.pairs.some(p=>p.parrain===n&&p.filleul.toLowerCase().includes(q)));
-  $('#main').innerHTML=`${mine.length?`<div class="card" style="margin-bottom:12px;border-left:4px solid var(--gold)"><div class="section-title" style="margin:0 0 8px">Mon parrainage</div>${mine.map(p=>`<div style="font-size:14.5px;line-height:1.6">${p.parrain.toLowerCase()===me?`Votre filleul(e) : <b>${esc(p.filleul)}</b>`:`Votre parrain / marraine : <b>${esc(p.parrain)}</b>`}</div>`).join('')}</div>`:''}
+  $('#main').innerHTML=`${mine.length?`<div class="card" style="margin-bottom:12px;border-left:4px solid var(--gold)"><div class="section-title" style="margin:0 0 8px">Mon parrainage</div>${mine.map(p=>`<div style="font-size:14.5px;line-height:1.6">${normName(p.parrain)===nm?`Votre filleul(e) : <b>${esc(p.filleul)}</b>`:`Votre parrain / marraine : <b>${esc(p.parrain)}</b>`}</div>`).join('')}</div>`:''}
     <label class="search">${I.search}<input id="pq" placeholder="Trouver un parrain, une marraine, un filleul…" value="${esc(ui.q||'')}"></label>
     <div class="section-title">${parrains.length} parrains & marraines · ${S.pairs.length} binôme${S.pairs.length>1?'s':''}</div>
     <div class="list">${rows.map(n=>{const fs=S.pairs.filter(p=>p.parrain===n);
