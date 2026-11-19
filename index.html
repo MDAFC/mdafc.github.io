@@ -1060,7 +1060,7 @@ function vDrive(){
     bindFiles();
   } else if(!ui.subject){
     const subs=S.subjects[ui.promo][sem];
-    const group=t=>subs.filter(x=>x.t===t).map(x=>{const fs=S.files.filter(f=>f.promo===ui.promo&&f.subject===x.n);
+    const group=t=>subs.filter(x=>x.t===t).map(x=>{const fs=S.files.filter(f=>f.promo===ui.promo&&f.subject===x.n&&fileSem(f)===sem);
       return `<button class="card folder" data-subj="${esc(x.n)}"><span class="ico">📚</span><div style="flex:1;min-width:0"><b style="font-size:14.5px">${esc(x.n)}</b><div class="sub">${x.d?esc(x.d)+' · ':''}${fs.length} document${fs.length>1?'s':''}</div></div>${chevron()}</button>`;}).join('');
     $('#main').innerHTML=`<div class="seg">${['S1','S2'].map(s=>`<button class="${s===sem?'on':''}" data-sem="${s}">Semestre ${s.slice(1)}${s===S.semester?' · en cours':''}</button>`).join('')}</div>
       ${subs.length?`<div class="section-title">Cours de la fac${ui.promo==='Mag 3'?' (Master 2)':''}</div><div class="list">${group(F)||'<div class="empty" style="padding:10px">—</div>'}</div>
@@ -1073,12 +1073,12 @@ function vDrive(){
     if(isBDE())setFab('Matière',()=>addSubject(ui.promo,sem));
   } else {
     const k=ui.kind||'Cours';
-    const fs=S.files.filter(f=>f.promo===ui.promo&&f.subject===ui.subject&&f.kind===k).sort((a,b)=>b.year.localeCompare(a.year)||b.t-a.t);
+    const fs=S.files.filter(f=>f.promo===ui.promo&&f.subject===ui.subject&&f.kind===k&&fileSem(f)===sem).sort((a,b)=>b.year.localeCompare(a.year)||b.t-a.t);
     $('#main').innerHTML=`<div class="seg">${KINDS.map(([x,ic])=>`<button class="${x===k?'on':''}" data-kind="${x}">${ic} ${x}</button>`).join('')}</div>
       <div class="list">${fs.map(fileRow).join('')||`<div class="empty">Aucun document dans « ${k} » pour l'instant.<br>Soyez le premier à en partager un !</div>`}</div>`;
     $$('[data-kind]').forEach(b=>b.onclick=()=>{ui.kind=b.dataset.kind;render();});
     bindFiles();
-    setFab('Partager',()=>uploadFile(ui.promo,ui.subject,k));
+    setFab('Partager',()=>uploadFile(ui.promo,ui.subject,k,sem));
   }
 }
 function addSubject(promo,sem){
@@ -1098,12 +1098,19 @@ function editSubjects(promo,sem){
   $$('[data-rm]').forEach(b=>b.onclick=async()=>{if(!await ask('Retirer « '+subs[+b.dataset.rm].n+' » ? Les documents déjà partagés restent accessibles via la recherche.'))return;subs.splice(+b.dataset.rm,1);save();editSubjects(promo,sem);render();});
   $$('[data-cur]').forEach(b=>b.onclick=()=>{S.semester=b.dataset.cur;save();editSubjects(promo,sem);render();toast('Semestre en cours : '+S.semester);});
 }
+const S2_SINCE=Date.parse('2026-11-19T00:00:00');
+function fileSem(f){
+  if(f.sem)return f.sem;
+  const has=sm=>(S.subjects[f.promo]?.[sm]||[]).some(x=>x.n===f.subject),a=has('S1'),b=has('S2');
+  return a&&!b?'S1':b&&!a?'S2':(f.t||0)>=S2_SINCE?'S2':'S1';
+}
 function fileRow(f){
   return `<button class="card folder file" data-file="${f.id}"><span class="ico">${f.url&&!f.data?'🔗':'📄'}</span><div style="flex:1;min-width:0"><b style="font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.title)}</b>
-    <div class="sub">${esc(f.kind)} · ${esc(f.subject)} · ${esc(f.year)}</div><div style="font-size:11.5px;color:var(--muted)">Partagé par ${esc(person(f.author).name)} · ${ago(f.t)}${isBDE()||isMine(f.author)?` · <span class="del" role="button" tabindex="0" data-delfile="${f.id}">supprimer</span>`:''}</div></div></button>`;
+    <div class="sub">${esc(f.kind)} · ${esc(f.subject)} · ${esc(fileSem(f))} · ${esc(f.year)}</div><div style="font-size:11.5px;color:var(--muted)">Partagé par ${esc(person(f.author).name)} · ${ago(f.t)}${isBDE()||isMine(f.author)?` · <span class="del" role="button" tabindex="0" data-movefile="${f.id}">passer en ${fileSem(f)==='S1'?'S2':'S1'}</span> · <span class="del" role="button" tabindex="0" data-delfile="${f.id}">supprimer</span>`:''}</div></div></button>`;
 }
 function bindFiles(){
   $$('[data-file]').forEach(b=>b.onclick=ev=>{const d=ev.target.closest('[data-delfile]');const f=S.files.find(x=>x.id===b.dataset.file);if(!f)return;
+    if(ev.target.closest('[data-movefile]')){ev.stopPropagation();f.sem=fileSem(f)==='S1'?'S2':'S1';save();render();toast('Document déplacé en '+f.sem);return;}
     if(d){ev.stopPropagation();(async()=>{if(!await ask('Supprimer le document « '+f.title+' » ?','Supprimer'))return;S.files=S.files.filter(x=>x.id!==f.id);save();render();toast('Document supprimé');})();return;}
     openFile(f);});
 }
@@ -1111,9 +1118,9 @@ function openFile(f){
   if(f.data){const a=document.createElement('a');a.href=f.data;a.download=f.fname||f.title;a.click();return;}
   if(f.url)window.open(f.url,'_blank','noopener');
 }
-function uploadFile(promo,subject,kind){
+function uploadFile(promo,subject,kind,sem){sem=sem||S.semester;
   openSheet(`<h3>Partager un document</h3><form id="f">
-    <div class="note" style="margin:0">${esc(promo)} · ${esc(subject)}</div>
+    <div class="note" style="margin:0">${esc(promo)} · ${esc(sem)} · ${esc(subject)}</div>
     <label class="field">Type<select name="kind">${KINDS.map(([k])=>`<option ${k===kind?'selected':''}>${k}</option>`).join('')}</select></label>
     <label class="field">Fichiers (PDF, Word, image…) : vous pouvez en choisir plusieurs<input type="file" name="file" multiple id="upFiles"></label>
     <label class="field" id="upTitle">Titre<input name="title" placeholder="Ex. Examen janvier 2025 + corrigé"><small class="sub" id="upHint" hidden>Plusieurs fichiers : chacun garde son nom de fichier comme titre.</small></label>
@@ -1127,7 +1134,7 @@ function uploadFile(promo,subject,kind){
     const lim=Backend.mode==='local'?1.5e6:25e6,big=files.filter(f=>f.size>lim);
     if(big.length){toast((big.length>1?big.length+' fichiers dépassent':'« '+big[0].name+' » dépasse')+' la limite de '+(lim/1e6)+' Mo. Utilisez plutôt un lien.');return;}
     const btn=ev.target.querySelector('.btn');btn.disabled=true;
-    const base={promo,subject,kind:fd.get('kind'),year:fd.get('year').trim(),author:myId()},added=[];
+    const base={promo,sem,subject,kind:fd.get('kind'),year:fd.get('year').trim(),author:myId()},added=[];
     const name=f=>f.name.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').trim();
     try{
       for(const [i,file] of files.entries()){
