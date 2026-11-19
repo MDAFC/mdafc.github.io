@@ -1197,7 +1197,8 @@ function vSondages(){
     const total=p.options.reduce((a,o)=>a+o.votes.length,0);
     openSheet(`<h3>${esc(p.question)}</h3><p class="sub" style="margin-bottom:10px">${total} répondant${total>1?'s':''} · visible uniquement par le BDE</p>
       ${p.options.map(o=>`<div class="section-title">${esc(o.text)} <span style="font-weight:600;color:var(--muted)">${o.votes.length}</span></div>
-        <div class="list">${o.votes.map(id=>person(id)).sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(x=>`<div class="card row">${avatar(x,'sm')}<div class="meta"><b>${esc(x.name)}</b>${x.promo?`<span>${esc(x.promo)}</span>`:''}</div></div>`).join('')||'<div class="sub">Personne</div>'}</div>`).join('')}`);});
+        <div class="list">${o.votes.map(id=>{const k=id==='me'||id===S.uid||S.profiles[id]||id==='sys'||bdeMember(id);
+            return k?person(id):{name:'Profil supprimé',promo:'',gone:true};}).sort((a,b)=>(a.gone?1:0)-(b.gone?1:0)||a.name.localeCompare(b.name,'fr')).map(x=>`<div class="card row" ${x.gone?'style="opacity:.6"':''}>${avatar(x.gone?{name:'?'}:x,'sm')}<div class="meta"><b>${esc(x.name)}</b><span>${x.gone?"A voté avec un appareil qui n'est plus inscrit (ancien téléphone, élève retiré ou ancienne session d'un membre du BDE)":esc(x.promo)}</span></div></div>`).join('')||'<div class="sub">Personne</div>'}</div>`).join('')}`);});
   $$('[data-close]').forEach(b=>b.onclick=()=>{const p=S.polls.find(x=>x.id===b.dataset.close);p.closed=!p.closed;save();render();});
   $$('[data-delpoll]').forEach(b=>b.onclick=async()=>{if(!await ask('Supprimer ce sondage ?'))return;S.polls=S.polls.filter(x=>x.id!==b.dataset.delpoll);save();render();});
   if(isBDE())setFab('Sondage',newPoll);
