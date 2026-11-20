@@ -723,21 +723,22 @@ async function refreshPush(){
 }
 // Une fois par appareil, à l'ouverture : propose d'activer les notifications (élèves déjà inscrits compris)
 async function askPushOnce(){
-  if(Backend.mode==='local'||Backend.status!=='online'||pushState()!=='off')return;
-  let asked=false;try{asked=localStorage.getItem('mdafc-push-asked')==='1';}catch(e){}
-  if(asked)return;
+  const st=pushState();
+  if(Backend.mode==='local'||Backend.status!=='online'||st==='on'||st==='unsupported')return;
+  let last=0;try{last=+localStorage.getItem('mdafc-push-asked-at')||0;}catch(e){}
+  if(Date.now()-last<3*864e5)return;
   // on ne demande que si le service d'envoi est en place
   let key=null;try{key=await Backend.pushKey();}catch(e){}
   if(!key||$('#sheet').classList.contains('show'))return;
-  try{localStorage.setItem('mdafc-push-asked','1');}catch(e){}
+  try{localStorage.setItem('mdafc-push-asked-at',String(Date.now()));}catch(e){}
   openSheet(`<div style="text-align:center;font-size:44px;line-height:1;margin:6px 0 8px">🔔</div>
     <h3 style="text-align:center">Activez les notifications</h3>
-    <p class="sub" style="text-align:center;line-height:1.5;margin:6px 0 16px">Soyez prévenu(e) des rappels de paiement du BDE et des nouveaux messages, même quand l'application est fermée.</p>
+    <p class="sub" style="text-align:center;line-height:1.5;margin:6px 0 16px">Soyez prévenu(e) des rappels du BDE, des sondages, des événements, des billetteries et des nouveaux messages, même quand l'application est fermée.${st==='install'?"<br><b>Sur iPhone, il faut d'abord installer l'app sur l'écran d'accueil.</b>":''}</p>
     <button class="btn block" id="pushAsk">Activer les notifications</button>
     <button class="btn ghost block small" id="pushLater" style="margin-top:8px">Plus tard</button>
     <p class="sub" style="text-align:center;font-size:12px;margin-top:10px">Vous pourrez les activer ou les couper à tout moment dans Mon profil.</p>`);
   // le clic déclenche directement la demande d'autorisation (obligatoire sur iPhone)
-  $('#pushAsk').onclick=()=>{closeSheet();enablePush(true);};
+  $('#pushAsk').onclick=()=>{closeSheet();if(st==='install'||st==='denied')setTimeout(()=>pushHelp(st),350);else enablePush(true);};
   $('#pushLater').onclick=closeSheet;
 }
 function pushCard(){
@@ -1374,7 +1375,7 @@ function drawMessages(){
   let lastDay='';
   $('#messages').innerHTML=current.msgs.map(m=>{const day=new Date(m.t).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
     const sep=day!==lastDay?`<div class="daysep">${day}</div>`:'';lastDay=day;const me=isMine(m.from);
-    const who=m.from==='me'&&m.name?m.name:person(m.from).name;
+    const who=S.profiles?.[m.from]?.name||(m.from==='me'&&m.name?m.name:bdeMember(m.from)?person(m.from).name:m.name||person(m.from).name);
     const del=m.id&&(me||(isBDE()&&!current.dm));
     return sep+`<div class="msg ${me?'me':''}">${!me?`<div class="who">${esc(who)}</div>`:''}${esc(m.text)}<time>${hm(m.t)}${del?`<button class="del" data-delmsg="${esc(m.id)}">Supprimer</button>`:''}</time></div>`;}).join('')||'<div class="empty">Aucun message. Lancez la conversation !</div>';
   $$('[data-delmsg]').forEach(b=>b.onclick=async()=>{const id=b.dataset.delmsg,m=current.msgs.find(x=>x.id===id);if(!m)return;
@@ -1634,6 +1635,7 @@ $('#overlay').onclick=closeSheet;
 /* ================= Mises à jour en direct ================= */
 let renderPending=false;
 function liveRender(){
+  const sp=S.me&&!isBDE()&&S.profiles?.[S.uid];if(sp&&sp.name&&sp.name!==S.me.name){S.me.name=sp.name;if(sp.promo)S.me.promo=sp.promo;}
   localSave();
   if(!entered||!S.me)return;
   if(current){current=chanById(current.id);if(current){drawMessages();S.read[current.id]=Date.now();}}
