@@ -1544,9 +1544,11 @@ async function drawCodes(){
     $('#studList').onclick=()=>{
       const dev=k=>k>1?` · ${k} appareils`:'';
       openSheet(`<h3>Étudiants inscrits (${people.length})</h3><p class="sub" style="margin-bottom:10px">Une même personne entrée depuis plusieurs appareils (Safari, icône de l'écran d'accueil, ordinateur) n'apparaît qu'une fois. Retirer lui coupe l'accès sur tous ses appareils : pensez ensuite à changer le code de sa promo.</p>
-        <div class="list">${people.map((x,i)=>`<div class="card row"><div class="meta"><b>${esc(x.name)}</b><span>${esc(x.promo)} · depuis le ${new Date(x.first).toLocaleDateString('fr-FR')}${dev(x.ids.length)}</span></div><button class="btn ghost small" data-mv="${i}">Promo</button><button class="btn ghost small" data-kick="${i}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>
+        <div class="list">${people.map((x,i)=>`<div class="card row"><div class="meta"><b>${esc(x.name)}</b><span>${esc(x.promo)} · depuis le ${new Date(x.first).toLocaleDateString('fr-FR')}${dev(x.ids.length)}</span></div><button class="btn ghost small" data-nm="${i}">Nom</button><button class="btn ghost small" data-mv="${i}">Promo</button><button class="btn ghost small" data-kick="${i}">Retirer</button></div>`).join('')||'<div class="empty">Aucun étudiant inscrit pour le moment.</div>'}</div>
         ${bdeRows.size?`<div class="section-title">Anciens appareils des membres du BDE</div><div class="card row"><div class="meta"><b>${[...bdeRows.keys()].map(esc).join(', ')}</b><span>Entrés avec un code de promo avant leur connexion BDE. Ce ne sont pas des étudiants : vous pouvez nettoyer, leur compte BDE n'est pas touché.</span></div><button class="btn ghost small" id="cleanBde">Nettoyer</button></div>`:''}
         ${orphans.length?`<div class="section-title">Anciens appareils sans profil</div><div class="card row"><div class="meta"><b>${orphans.length} ancienne${orphans.length>1?'s':''} session${orphans.length>1?'s':''}</b><span>Appareils dont le profil a été remplacé (par exemple avant une connexion BDE)</span></div><button class="btn ghost small" id="cleanOrph">Nettoyer</button></div>`:''}`);
+      $$('[data-nm]').forEach(b=>b.onclick=async()=>{const x=people[+b.dataset.nm];const n=(await askText('Prénom et nom de cet étudiant :',x.name.includes('@')?'':x.name)||'').trim();if(!n||n===x.name)return;
+        try{for(const id of x.ids)await Backend.setStudentName(id,n);toast('Nom corrigé : '+n);closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
       $$('[data-mv]').forEach(b=>b.onclick=async()=>{const x=people[+b.dataset.mv];const p=await choose('Nouvelle promo pour '+x.name+' :',PROMOS);if(!p)return;
         try{for(const id of x.ids)await Backend.setStudentPromo(id,p);toast(x.name+' est maintenant en '+p);closeSheet();drawCodes();}catch(e){toast('Échec : '+(e.message||e));}});
       $$('[data-kick]').forEach(b=>b.onclick=async()=>{const x=people[+b.dataset.kick];if(!await ask('Retirer '+x.name+" de l'application"+(x.ids.length>1?' (sur ses '+x.ids.length+' appareils)':'')+' ?','Retirer'))return;
@@ -1649,7 +1651,9 @@ if(window.MDAFC_CONFIG&&String(MDAFC_CONFIG.url).startsWith('mock')){const b=doc
     const r=await Backend.init(S,SEED,{onChange:liveRender,onError:e=>{console.warn(e);toast('Action non enregistrée : '+(e.message||e));}});
     if(Backend.mode!=='local'){
       S.uid=r.uid;
-      if(S.me&&r.joined){S.me.id=S.uid;S.me.bde=r.member;if(r.member)S.me.name=bdeMember(r.member).name;Backend.saveProfile(S.me);}
+      if(S.me&&r.joined){S.me.id=S.uid;S.me.bde=r.member;
+        const sp=!r.member&&S.profiles?.[S.uid];if(sp){if(sp.name)S.me.name=sp.name;if(sp.promo)S.me.promo=sp.promo;}
+        if(r.member)S.me.name=bdeMember(r.member).name;Backend.saveProfile(S.me);}
       localSave();
       if(r.bdeRefused)setTimeout(()=>toast('Cette adresse n\'est pas enregistrée comme membre du BDE'),1200);
       else if(r.member)setTimeout(()=>toast('Connecté(e) au BDE : '+bdeMember(r.member).name),1200);

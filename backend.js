@@ -156,6 +156,7 @@ window.Backend={
   async getCodes(){const {data,error}=await client.rpc('get_promo_codes');if(error)throw error;return data;},
   async setCode(promo,code){const {error}=await client.rpc('set_promo_code',{p_promo:promo,p_code:code});if(error)throw new Error(error.message);},
   async listStudents(){const {data,error}=await client.from('students').select('id,promo,joined_at').order('joined_at',{ascending:false});if(error)throw error;return data;},
+  async setStudentName(id,name){const {error}=await client.rpc('set_student_name',{p_id:id,p_name:name});if(error)throw new Error(/function|schema cache/i.test(error.message)?'mise à jour de la base nécessaire':error.message);if(profiles[id])profiles[id].name=name;onChange();},
   async setStudentPromo(id,promo){const {error}=await client.rpc('set_student_promo',{p_id:id,p_promo:promo});if(error)throw new Error(error.message);if(profiles[id])profiles[id].promo=promo;onChange();},
   async removeStudent(id){let r=await client.from('students').delete().eq('id',id);if(r.error)throw r.error;r=await client.from('profiles').delete().eq('id',id);delete profiles[id];onChange();},
   // Se souvenir de moi : la session reste enregistrée sur l'appareil (et on demande au navigateur de ne pas l'effacer)
@@ -264,6 +265,7 @@ function MockSupabase(){
       if(name==='join_promo'){const p={'MAG1-TEST':'Mag 1','MAG2-TEST':'Mag 2','MAG3-TEST':'Mag 3'}[(args.p_code||'').toUpperCase()];if(!p)return res(null,{message:'Code invalide'});d.students[me]={id:me,promo:p,joined_at:new Date().toISOString()};setdb(d);return res(p);}
       if(name==='get_promo_codes')return res([{promo:'Mag 1',code:'MAG1-TEST'},{promo:'Mag 2',code:'MAG2-TEST'},{promo:'Mag 3',code:'MAG3-TEST'}]);
       if(name==='set_promo_code')return res(null);
+      if(name==='set_student_name'){if(d.profiles[args.p_id])d.profiles[args.p_id].name=args.p_name;setdb(d);return res(null);}
       if(name==='set_student_promo'){if(d.students[args.p_id])d.students[args.p_id].promo=args.p_promo;if(d.profiles[args.p_id])d.profiles[args.p_id].promo=args.p_promo;setdb(d);return res(null);}
       return res(null);},
     from,
