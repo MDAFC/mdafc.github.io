@@ -807,7 +807,7 @@ function seedPairs(){
   try{if(localStorage.getItem('mdafc-pairs-official')==='1')return;}catch(e){}
   if(Backend.status==='locked')return;
   const k=normName,mag1=uniqueProfiles().filter(x=>x.promo==='Mag 1');
-  const full=n=>{if(n.includes(' '))return n;const m=mag1.filter(x=>k(x.name).split(' ')[0]===k(n));return m.length===1?m[0].name:n;};
+  const full=n=>{if(n.includes(' '))return n;const m=mag1.filter(x=>{const t=k(x.name).split(' ');return k(n).split(' ').every(w=>t.includes(w));});return m.length===1?m[0].name:n;};
   const par=new Set(OFFICIAL_PAIRS.map(([a])=>k(a)));
   S.pairs=S.pairs.filter(x=>!par.has(k(x.parrain))).concat(OFFICIAL_PAIRS.map(([a,b])=>({parrain:a,filleul:full(b)})));
   save();
@@ -1381,7 +1381,8 @@ $('#composer').onsubmit=e=>{e.preventDefault();const v=$('#msgInput').value.trim
 
 /* ================= Annuaire (étudiants + anciens) ================= */
 let ANC=null,ancLoading=false;
-const normName=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]+/g,' ').trim();
+// Clé d'un nom : sans accents ni majuscules, mots triés (« BOQUILLOD Noelie » = « Noélie Boquillod »)
+const normName=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]+/g,' ').trim().split(' ').filter(Boolean).sort().join(' ');
 // Nom qui désigne un membre du BDE : nom complet, ou prénom seul quand un seul membre le porte
 const BDE_KEYS=(()=>{const full=new Map(),first=new Map();
   BDE_MEMBERS.forEach(m=>{full.set(normName(m.name),m);const f=normName(m.name.split(' ')[0]);first.set(f,first.has(f)?null:m);});
