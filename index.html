@@ -684,11 +684,23 @@ const onIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platfo
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(e=>console.warn(e));
 const b64u=s=>{const p='='.repeat((4-s.length%4)%4),r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(r,c=>c.charCodeAt(0));};
 const pushState=()=>!pushOK()?(onIOS()&&!isStandalone()?'install':'unsupported'):Notification.permission==='denied'?'denied':S.pushOn&&Notification.permission==='granted'?'on':'off';
+function pushHelp(st){
+  const ios=onIOS();
+  const body=st==='install'?`<p>Sur iPhone, Apple n'autorise les notifications que pour les applications installées sur l'écran d'accueil.</p>
+      <ol style="margin:10px 0 0 18px;line-height:1.7"><li>Dans <b>Safari</b>, touchez <b>Partager</b> (le carré avec une flèche).</li><li>Choisissez <b>« Sur l'écran d'accueil »</b>, puis <b>Ajouter</b>.</li><li>Ouvrez MDAFC <b>depuis la nouvelle icône</b>.</li><li>Touchez <b>Activer les notifications</b> (Accueil ou Mon profil).</li></ol>`
+    :st==='denied'?(ios?`<p>Les notifications ont été refusées sur cet iPhone. Pour les autoriser :</p><ol style="margin:10px 0 0 18px;line-height:1.7"><li>Ouvrez <b>Réglages</b> → <b>Notifications</b>.</li><li>Touchez <b>MDAFC</b> et activez <b>Autoriser les notifications</b>.</li><li>Revenez dans l'app et touchez de nouveau <b>Activer les notifications</b>.</li></ol>`
+      :`<p>Les notifications ont été refusées pour MDAFC dans ce navigateur. Cliquez sur le <b>cadenas</b> (ou l'icône de réglages) à gauche de l'adresse, mettez <b>Notifications</b> sur <b>Autoriser</b>, rechargez la page puis touchez de nouveau <b>Activer les notifications</b>.</p>`)
+    :`<p>Ce navigateur ne permet pas les notifications.</p><p style="margin-top:8px">${ios?"Il faut un iPhone à jour (iOS 16.4 ou plus récent) et l'app installée sur l'écran d'accueil depuis <b>Safari</b>.":"Utilisez Chrome, Edge, Firefox ou Safari à jour, ou installez l'app sur votre téléphone."}</p>`;
+  openSheet(`<div style="text-align:center;font-size:40px;line-height:1;margin:6px 0 8px">🔔</div><h3 style="text-align:center">Activer les notifications</h3>
+    <div style="font-size:14px;line-height:1.55;margin-top:8px">${body}</div><button class="btn block" id="phOk" style="margin-top:16px">J'ai compris</button>`);
+  $('#phOk').onclick=closeSheet;
+}
 async function enablePush(msgs){
+  const st0=pushState();if(st0==='install'||st0==='unsupported'||st0==='denied'){pushHelp(st0);return false;}
   if(!pushOK()){toast(onIOS()&&!isStandalone()?"Sur iPhone, installez d'abord l'app sur l'écran d'accueil, puis ouvrez-la depuis l'icône MDAFC":"Les notifications ne sont pas disponibles sur ce navigateur");return false;}
   let perm=Notification.permission;
   try{if(perm==='default')perm=await Notification.requestPermission();}catch(e){}
-  if(perm!=='granted'){toast(perm==='denied'?'Notifications bloquées : autorisez-les pour MDAFC dans les réglages du téléphone':'Notifications non activées');render();return false;}
+  if(perm!=='granted'){if(perm==='denied')pushHelp('denied');else toast('Notifications non activées');render();return false;}
   try{
     const key=await Backend.pushKey();if(!key)throw new Error('service pas encore prêt, réessayez plus tard');
     const reg=await navigator.serviceWorker.ready;
@@ -730,11 +742,9 @@ async function askPushOnce(){
 }
 function pushCard(){
   if(Backend.mode==='local'||Backend.status!=='online')return '';
-  const st=pushState();let off=false;try{off=localStorage.getItem('mdafc-push-off')==='1';}catch(e){}
-  if(st==='on'||st==='unsupported'||off)return '';
-  const body=st==='install'?"Sur iPhone, les notifications marchent une fois l'app installée sur l'écran d'accueil (voir ci-dessus). Ouvrez-la ensuite depuis l'icône et activez-les ici."
-    :st==='denied'?"Elles sont bloquées sur cet appareil : autorisez-les pour MDAFC dans les réglages du téléphone (Réglages → Notifications)."
-    :`Rappels de paiement du BDE et nouveaux messages des chats.<div style="margin-top:8px"><button class="btn small" id="pushGo">Activer les notifications</button></div>`;
+  const st=pushState();let off=false;try{off=localStorage.getItem('mdafc-push-off2')==='1';}catch(e){}
+  if(st==='on'||off)return '';
+  const body=`Rappels du BDE, sondages, événements, billetteries et nouveaux messages.${st==='install'?"<br><i>Sur iPhone : installez d'abord l'app sur l'écran d'accueil.</i>":''}<div style="margin-top:8px"><button class="btn small" id="pushGo">🔔 Activer les notifications</button></div>`;
   return `<div class="card" id="pushCard" style="display:flex;gap:12px;align-items:flex-start;border:1px solid var(--gold)">
     <span style="font-size:28px;line-height:1">🔔</span>
     <div style="flex:1;font-size:13.5px;line-height:1.5"><b>Recevez les notifications</b><br>${body}</div>
@@ -742,7 +752,7 @@ function pushCard(){
 }
 function bindPushCard(){
   if($('#pushGo'))$('#pushGo').onclick=()=>enablePush(true);
-  if($('#pushOff'))$('#pushOff').onclick=()=>{try{localStorage.setItem('mdafc-push-off','1');}catch(e){}$('#pushCard').remove();};
+  if($('#pushOff'))$('#pushOff').onclick=()=>{try{localStorage.setItem('mdafc-push-off2','1');}catch(e){}$('#pushCard').remove();};
 }
 function installCard(){
   let off=false;try{off=localStorage.getItem('mdafc-install-off')==='1';}catch(e){}
@@ -1577,13 +1587,10 @@ function vProfil(){
          <div style="display:flex;gap:8px"><input class="input" type="password" name="pw" required placeholder="Mot de passe BDE" autocomplete="current-password" style="flex:1;min-width:0"><button class="btn small">Connexion</button></div></form>`}</div>
    <div class="section-title">Notifications</div>
    <div class="card" style="font-size:13.5px;line-height:1.5;color:var(--muted)">${(()=>{const st=pushState();
-     if(st==='on')return `<b style="color:var(--text)">✅ Notifications activées sur cet appareil</b><br>Vous êtes prévenu(e) des rappels du BDE${S.pushMsgs!==false?' et des nouveaux messages':''}.
+     if(st==='on')return `<b style="color:var(--text)">✅ Notifications activées sur cet appareil</b><br>Vous êtes prévenu(e) des rappels du BDE, des sondages, des événements et des billetteries${S.pushMsgs!==false?', ainsi que des nouveaux messages':''}.
        <label style="display:flex;gap:8px;align-items:center;margin:10px 0;color:var(--text)"><input type="checkbox" id="pushMsgs" ${S.pushMsgs!==false?'checked':''} style="width:18px;height:18px;accent-color:var(--red)"> Aussi les messages (chats de ma promo, Général, messages privés)</label>
        <button class="btn ghost small" id="pushStop">Désactiver</button>`;
-     if(st==='install')return "Sur iPhone, installez d'abord l'app sur l'écran d'accueil (Safari → Partager → « Sur l'écran d'accueil »), ouvrez-la depuis l'icône, puis revenez ici.";
-     if(st==='denied')return 'Notifications bloquées sur cet appareil : autorisez-les pour MDAFC dans les réglages du téléphone, puis revenez ici.';
-     if(st==='unsupported')return 'Ce navigateur ne permet pas les notifications.';
-     return `Recevez les rappels de paiement du BDE et les nouveaux messages, même quand l'app est fermée.<button class="btn block small" id="pushStart" style="margin-top:10px">🔔 Activer les notifications</button>`;})()}
+     return `${st==='install'?"<b style='color:var(--text)'>Sur iPhone : installez d'abord l'app sur l'écran d'accueil.</b><br>":st==='denied'?"<b style='color:var(--text)'>Notifications bloquées sur cet appareil.</b><br>":''}Recevez les rappels du BDE, les sondages, les événements, les billetteries et les nouveaux messages, même quand l'app est fermée.<button class="btn block small" id="pushStart" style="margin-top:10px">🔔 Activer les notifications</button>`;})()}
      <br><span style="font-size:12.5px">La cloche 🔔 d'un rappel ajoute aussi une alerte à J-7, J-3, J-1 et le jour J.</span></div>
    <button class="btn ghost block" id="reset" style="margin-top:18px">Réinitialiser la démo</button>`;
   if($('#pushStart'))$('#pushStart').onclick=()=>enablePush(true);
