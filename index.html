@@ -789,33 +789,8 @@ function vSuggestions(){
   $$('[data-done]').forEach(x=>x.onclick=()=>{const q=b.questions.find(y=>y.id===x.dataset.done);q.done=!q.done;save();render();toast(q.done?'Marqué comme fait':'Remis en attente');});
   $$('[data-delq]').forEach(x=>x.onclick=async()=>{if(!await ask('Supprimer ce message ?','Supprimer'))return;b.questions=b.questions.filter(y=>y.id!==x.dataset.delq);save();render();});
 }
-// Offres de stages et d'alternances repérées en novembre 2026 (Aix-Marseille). Mag 1 ≈ L3, Mag 2 ≈ M1, Mag 3 ≈ M2.
-const SEED_OFFERS=[
-  {id:'os1',type:'Alternance',title:'Alternant(e) juriste en droit des affaires',company:'Crédit Agricole Business Digital',city:'Aix-en-Provence',period:'Apprentissage',promos:['Mag 2','Mag 3'],desc:"Rattaché(e) à la direction générale et aux fonctions supports d'une nouvelle entité du Crédit Agricole. Juridique d'entreprise, droit des affaires.",link:'https://fr.linkedin.com/jobs/view/alternant-e-juriste-en-droit-des-affaires-h-f-at-cr%C3%A9dit-agricole-business-digital-4427051043'},
-  {id:'os2',type:'Alternance',title:'Alternance – Juriste en droit des affaires',company:'Galileo Global Education',city:'Aix-en-Provence',period:'Apprentissage',promos:['Mag 2','Mag 3'],desc:"Juriste d'entreprise en droit des affaires. Vérifiez le niveau d'études demandé et si le poste est toujours ouvert.",link:'https://www.jobijoba.com/fr/annonce/54/914a3bf1c9f7a1448ed2a7efeb7461cb'},
-  {id:'os3',type:'Stage',title:'Stage droit des affaires',company:'Pernod Ricard',city:'Marseille',period:'Janvier 2027 · 6 mois',promos:['Mag 2','Mag 3'],desc:'Analyse et rédaction de contrats ; concurrence, distribution et consommation ; RGPD et numérique ; veille. Gratification annoncée : 1 410 à 1 550 € brut/mois. Idéalement M1/M2 en droit des affaires.',link:'https://fr.linkedin.com/jobs/view/stage-droit-des-affaires-janvier-2027-at-pernod-ricard-4489480793'},
-  {id:'os4',type:'Stage',title:'Stagiaire juridique – contrats entreprises',company:'CIC Lyonnaise de Banque',city:'Marseille 8e',period:'Avril 2027 · 6 mois',promos:['Mag 3'],desc:'Droit bancaire, contrats et sociétés : rédaction de contrats de crédit, garanties et sûretés, suivi des opérations. Profil M2 droit bancaire ou droit des affaires. 900 à 1 000 €/mois.',link:'https://fr.linkedin.com/jobs/view/stagiaire-juridique-services-contrats-entreprises-f-h-at-cic-lyonnaise-de-banque-4491451113'},
-  {id:'os5',type:'Stage',title:'Stagiaire juriste droit des affaires / commercial',company:'JOTT',city:'Marseille',period:'2 mois',promos:['Mag 2','Mag 3'],desc:"Suivi des contrats commerciaux et veille juridique. Profil M1 ou M2. Stage annoncé non rémunéré. L'annonce est sur la page des offres de l'IEJ.",link:'https://iej-facdedroit.univ-amu.fr/fr/offres-de-stage'},
-  {id:'os6',type:'Stage',title:'Élève-avocat en droit économique',company:'Lamartine Conseil',city:'Aix-en-Provence',period:'À partir d\'octobre 2027 · 6 mois',promos:['Mag 3'],desc:'Contrats commerciaux et distribution, concurrence, propriété intellectuelle et numérique, audits liés aux opérations de M&A. Profil spécialisé en droit des affaires.',link:'https://www.edacentresud.com/offres/lamartine-conseil-recherche-un-eleve-avocat-en-droit-economique-offre-10166'},
-  {id:'os7',type:'Stage',title:'Stage droit des sociétés, M&A et Private Equity',company:'Squair',city:'Aix-en-Provence',period:'Janvier 2027 · 6 mois',promos:['Mag 3'],desc:"Recherches juridiques, rédaction d'actes et de notes, suivi des dossiers clients. Profil M2 droit des affaires ou DJCE, spécialité sociétés. Stage rémunéré.",link:'https://www.qworo.fr/emploi/squair-stage-eleve-avocat-e-droit-des-societes-m-et-a-private-equity-stage-c35002da-a3de-4208-8a0f-7c815b5257cf'},
-  {id:'os8',type:'Stage',title:'Élève-avocat en droit commercial et droit social',company:'Bignon Lebray',city:'Aix-en-Provence',period:'À partir du 4 janvier 2027 · 6 mois',promos:['Mag 3'],desc:'Recherches et notes, rédaction d\'actes, préparation des audiences, rendez-vous clients. Niveau M2 ou plus, élève-avocat de préférence. Annonce du 18/11/2026.',link:'https://www.village-justice.com/annonces/eleve-avocat-en-droit-commercial-et-droit-social-s1-2027/offres/430957'},
-  {id:'os9',type:'Stage',title:'Élève-avocat en droit des affaires',company:'Choley & Vidal Avocats',city:'Aix-en-Provence',period:'6 mois',promos:['Mag 3'],desc:'Gestion de dossiers de A à Z sous la supervision des associés, contact client. CRFPA et M2 droit des affaires demandés. Annonce du 07/10/2026.',link:'https://www.village-justice.com/annonces/stage-%C3%A9l%C3%A8ve-avocat-droit-des-affaires-priv%C3%A9/offres/429139'},
-  {id:'os10',type:'Stage',title:'Deux stagiaires en droit public des affaires',company:'Adaltys Avocats',city:'Marseille',period:'6 mois',promos:['Mag 3'],desc:'Droit public des affaires (contrats publics, urbanisme, énergie…). Profil M2 ou élève-avocat.',link:'https://adaltys.com/offres/deux-stagiaires-h-f-en-droit-public-des-affaires/'},
-  {id:'os11',type:'Alternance',title:'🔎 Toutes les alternances juriste droit des affaires',company:'Recherche LinkedIn',city:'Aix-en-Provence',period:'Mise à jour en continu',promos:['Mag 1','Mag 2','Mag 3'],desc:'Recherche prête à l\'emploi : les offres apparaissent sous des intitulés variés (juriste, assistant juridique, juriste corporate…). Pensez aussi aux directions juridiques des banques, assurances et grands groupes.',link:'https://www.linkedin.com/jobs/search/?keywords=alternance%20juriste%20droit%20des%20affaires&location=Aix-en-Provence%2C%20France'},
-  {id:'os12',type:'Stage',title:'🔎 Offres de stage de l\'IEJ d\'Aix-Marseille',company:'Aix-Marseille Université',city:'Aix-Marseille',period:'Mise à jour en continu',promos:['Mag 1','Mag 2','Mag 3'],desc:'Page de la faculté qui centralise des offres de stages et d\'emplois juridiques de la région.',link:'https://iej-facdedroit.univ-amu.fr/fr/offres-de-stage'},
-  {id:'os13',type:'Stage',title:'🔎 Annonces juridiques en région PACA',company:'Village de la Justice',city:'Provence-Alpes-Côte d\'Azur',period:'Mise à jour en continu',promos:['Mag 1','Mag 2','Mag 3'],desc:'Stages, alternances et collaborations en cabinets et directions juridiques (avocats, juristes, fiscalistes).',link:'https://www.village-justice.com/annonces/avocats-juristes-autres/emploi/paca-corse.html'}
-];
-// Ajoutées une fois par le premier membre du BDE qui ouvre l'app ; une offre déjà partagée (même lien ou même entreprise) n'est pas doublée
-function seedOffers(){
-  try{if(localStorage.getItem('mdafc-offers-nov26')==='1')return;}catch(e){}
-  if(Backend.status==='locked')return;
-  const nm=x=>normName(x).replace(/\b(avocats?|conseil|groupe|sas|sa)\b/g,'').trim(),bare=u=>String(u||'').split('?')[0].replace(/\/$/,'');
-  const have=S.offers.map(o=>({id:o.id,link:bare(o.link),co:nm(o.company)}));
-  const add=SEED_OFFERS.filter(o=>!have.some(h=>h.id===o.id||(o.link&&h.link===bare(o.link)&&!o.title.startsWith('🔎'))||(h.co&&h.co===nm(o.company))));
-  const now=Date.now();add.forEach((o,i)=>S.offers.push({...o,contact:'',author:myId(),t:now-i*1000}));
-  if(add.length)save();
-  try{localStorage.setItem('mdafc-offers-nov26','1');}catch(e){}
-}
+// Anciennes offres ajoutées à la main (os1…os13) : remplacées par la veille automatique, retirées de la base par le BDE
+function cleanSeedOffers(){const n=S.offers.length;S.offers=S.offers.filter(o=>!/^os\d+$/.test(o.id));if(S.offers.length!==n)save();}
 // Binômes officiels de la soirée parrainage (feuille Google du BDE, novembre 2026)
 const OFFICIAL_PAIRS=[
   ['Clémence Aillaud','Aislinn de Brun'],['Chiara Audibert','Anna'],['Lou Bianchi','Chiara Campi'],['Erine Bigel','Ambre Alcaraz'],
@@ -839,7 +814,7 @@ function seedPairs(){
   try{localStorage.setItem('mdafc-pairs-official','1');}catch(e){}
 }
 function vHome(){
-  if(isBDE()){suggBoard();seedOffers();seedPairs();
+  if(isBDE()){suggBoard();cleanSeedOffers();seedPairs();
     // Matières Mag 1 · S2 : ajoutées une fois dans la base partagée par le premier membre du BDE qui ouvre l'app
     if(Backend.status!=='locked'&&S.subjects?.['Mag 1']&&!(S.subjects['Mag 1'].S2||[]).length){S.subjects['Mag 1'].S2=structuredClone(SUBJECTS_S2_MAG1);save();}}
   const rem=S.reminders.filter(r=>daysLeft(r.deadline)>=0).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,2);
@@ -1273,17 +1248,31 @@ function vQuestions(){
 }
 
 /* ================= Stages & alternances ================= */
+// Veille automatique : offres.json, publié avec l'app et mis à jour deux fois par semaine
+let VEILLE=null;
+function loadVeille(){VEILLE=VEILLE||{loading:true,offers:[],links:[]};
+  fetch('offres.json?d='+Math.floor(Date.now()/36e5),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{VEILLE=d&&Array.isArray(d.offers)?d:{offers:[],links:[]};if(page==='stages')render();}).catch(()=>{VEILLE={offers:[],links:[]};});}
+const LVL={'L3':'Mag 1','M1':'Mag 2','M2':'Mag 3'},LVL_OF={'Mag 1':'L3','Mag 2':'M1','Mag 3':'M2'};
 function vStages(){
-  const f=ui.filter||'Tous';
-  const list=S.offers.filter(o=>f==='Tous'||o.type===f).sort((a,b)=>b.t-a.t);
-  $('#main').innerHTML=`<div class="chips">${['Tous','Stage','Alternance','Collaboration','Job étudiant'].map(t=>`<button class="chip ${t===f?'on':''}" data-f="${t}">${t==='Tous'?'Toutes les offres':t}</button>`).join('')}</div>
-    <div class="list">${list.map(o=>`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><span class="tag ${o.type==='Alternance'?'gold':''}">${esc(o.type)}</span><span class="sub">${ago(o.t)}</span></div>
+  if(!VEILLE)loadVeille();
+  const f=ui.filter||'Tous',lv=ui.lvl||'Tous',bare=u=>String(u||'').split('?')[0].replace(/\/$/,'');
+  const shared=S.offers.filter(o=>!/^os\d+$/.test(o.id)).map(o=>({...o,lv:(o.promos||[]).map(p=>LVL_OF[p]).filter(Boolean)}));
+  const links=new Set(shared.map(o=>bare(o.link)));
+  const auto=(VEILLE.offers||[]).filter(o=>!links.has(bare(o.link))).map(o=>({...o,veille:true,lv:o.levels||[],t:Date.parse(o.found)||0}));
+  const list=[...shared,...auto].filter(o=>(f==='Tous'||o.type===f)&&(lv==='Tous'||o.lv.includes(lv))).sort((a,b)=>b.t-a.t);
+  const upd=VEILLE.updated?new Date(VEILLE.updated).toLocaleDateString('fr-FR',{day:'numeric',month:'long'}):'';
+  $('#main').innerHTML=`<div class="note">🔎 Veille automatique : stages et alternances en droit des affaires, fiscalité et corporate (Aix, Marseille, Nice, Paris) pour L3, M1 et M2. Les liens sont vérifiés deux fois par semaine et les offres closes retirées${upd?` · dernière mise à jour le ${upd}`:''}.</div>
+    <div class="chips">${['Tous','Stage','Alternance','Collaboration','Job étudiant'].map(t=>`<button class="chip ${t===f?'on':''}" data-f="${t}">${t==='Tous'?'Toutes les offres':t}</button>`).join('')}</div>
+    <div class="chips">${['Tous','L3','M1','M2'].map(t=>`<button class="chip ${t===lv?'on':''}" data-lv="${t}">${t==='Tous'?'Tous niveaux':t}</button>`).join('')}</div>
+    <div class="list">${list.map(o=>`<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><span class="tag ${o.type==='Alternance'?'gold':''}">${esc(o.type)}</span><span class="sub">${o.veille?(o.checked?'vérifiée le '+new Date(o.checked).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):''):ago(o.t)}</span></div>
       <h3 style="font-size:15.5px;margin:8px 0 2px">${esc(o.title)}</h3>
       <div style="font-size:13.5px;color:var(--red);font-weight:600">${esc(o.company)}${o.city?' · '+esc(o.city):''}</div>
-      <div class="sub" style="margin:4px 0">${o.period?'📅 '+esc(o.period)+' · ':''}🎓 ${esc(o.promos.join(', '))}</div>
+      <div class="sub" style="margin:4px 0">${o.period?'📅 '+esc(o.period)+' · ':''}🎓 ${esc(o.lv.length?o.lv.join(' · '):(o.promos||[]).join(', '))}</div>
       ${o.desc?`<p style="font-size:13.5px;line-height:1.5;margin:6px 0">${esc(o.desc)}</p>`:''}
       <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">${o.link?`<a class="btn small" href="${esc(o.link)}" target="_blank" rel="noopener">Voir l'offre ${small(I.ext,14)}</a>`:''}${o.contact?`<span class="sub">✉️ ${esc(o.contact)}</span>`:''}</div>
-      <div class="sub" style="margin-top:8px">Partagée par ${esc(person(o.author).name)}${isMine(o.author)||isBDE()?` · <button class="del" data-deloff="${o.id}">retirer</button>`:''}</div></div>`).join('')||'<div class="empty">Aucune offre pour le moment.<br>Vous avez repéré un stage ou une alternance ? Partagez-le !</div>'}</div>`;
+      <div class="sub" style="margin-top:8px">${o.veille?`🤖 Veille automatique${o.source?' · source : '+esc(o.source):''}`:`Partagée par ${esc(person(o.author).name)}${isMine(o.author)||isBDE()?` · <button class="del" data-deloff="${o.id}">retirer</button>`:''}`}</div></div>`).join('')||(VEILLE.loading?'<div class="empty">Chargement des offres…</div>':'<div class="empty">Aucune offre pour ces critères.<br>Vous avez repéré un stage ou une alternance ? Partagez-le !</div>')}</div>
+    ${(VEILLE.links||[]).length?`<div class="section-title">Pour chercher plus loin</div><div class="list">${VEILLE.links.map(l=>`<a class="card folder" href="${esc(l.link)}" target="_blank" rel="noopener"><span class="ico">🔎</span><div style="flex:1;min-width:0"><b style="font-size:14.5px">${esc(l.title)}</b>${l.desc?`<div class="sub">${esc(l.desc)}</div>`:''}</div>${small(I.ext,16)}</a>`).join('')}</div>`:''}`;
+  $$('[data-lv]').forEach(b=>b.onclick=()=>{ui.lvl=b.dataset.lv;render();});
   $$('[data-f]').forEach(b=>b.onclick=()=>{ui.filter=b.dataset.f;render();});
   $$('[data-deloff]').forEach(b=>b.onclick=async()=>{if(!await ask('Retirer cette offre ?'))return;S.offers=S.offers.filter(x=>x.id!==b.dataset.deloff);save();render();});
   setFab('Offre',()=>{
