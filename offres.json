@@ -1,19 +1,201 @@
 {
-  "updated": "2026-11-20T09:00:00+01:00",
+  "updated": "2026-11-23T09:58:22+01:00",
   "offers": [
-    {"id": "v-ca-business-digital", "type": "Alternance", "title": "Alternant(e) juriste en droit des affaires", "company": "Crédit Agricole Business Digital", "city": "Aix-en-Provence", "period": "Apprentissage", "levels": ["M1", "M2"], "desc": "Rattaché(e) à la direction générale et aux fonctions supports d'une nouvelle entité du Crédit Agricole. Juridique d'entreprise, droit des affaires.", "link": "https://fr.linkedin.com/jobs/view/alternant-e-juriste-en-droit-des-affaires-h-f-at-cr%C3%A9dit-agricole-business-digital-4427051043", "source": "LinkedIn", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0},
-    {"id": "v-galileo", "type": "Alternance", "title": "Alternance – Juriste en droit des affaires", "company": "Galileo Global Education", "city": "Aix-en-Provence", "period": "Apprentissage", "levels": ["M1", "M2"], "desc": "Juriste d'entreprise en droit des affaires. Vérifiez le niveau d'études demandé avant de postuler.", "link": "https://www.jobijoba.com/fr/annonce/54/914a3bf1c9f7a1448ed2a7efeb7461cb", "source": "Jobijoba", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0},
-    {"id": "v-pernod-ricard", "type": "Stage", "title": "Stage droit des affaires", "company": "Pernod Ricard", "city": "Marseille", "period": "Janvier 2027 · 6 mois", "levels": ["M1", "M2"], "desc": "Analyse et rédaction de contrats ; concurrence, distribution et consommation ; RGPD et numérique ; veille. Gratification annoncée : 1 410 à 1 550 € brut/mois.", "link": "https://fr.linkedin.com/jobs/view/stage-droit-des-affaires-janvier-2027-at-pernod-ricard-4489480793", "source": "LinkedIn", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0},
-    {"id": "v-cic-lyonnaise", "type": "Stage", "title": "Stagiaire juridique – contrats entreprises", "company": "CIC Lyonnaise de Banque", "city": "Marseille", "period": "Avril 2027 · 6 mois", "levels": ["M2"], "desc": "Droit bancaire, contrats et sociétés : contrats de crédit, garanties et sûretés, suivi des opérations. Profil M2 droit bancaire ou droit des affaires. 900 à 1 000 €/mois.", "link": "https://fr.linkedin.com/jobs/view/stagiaire-juridique-services-contrats-entreprises-f-h-at-cic-lyonnaise-de-banque-4491451113", "source": "LinkedIn", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0},
-    {"id": "v-squair", "type": "Stage", "title": "Stage droit des sociétés, M&A et Private Equity", "company": "Squair", "city": "Aix-en-Provence", "period": "Janvier 2027 · 6 mois", "levels": ["M2"], "desc": "Recherches juridiques, rédaction d'actes et de notes, suivi des dossiers clients. Profil M2 droit des affaires ou DJCE. Stage rémunéré.", "link": "https://www.qworo.fr/emploi/squair-stage-eleve-avocat-e-droit-des-societes-m-et-a-private-equity-stage-c35002da-a3de-4208-8a0f-7c815b5257cf", "source": "Qworo", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0},
-    {"id": "v-bignon-lebray", "type": "Stage", "title": "Stage en droit commercial et droit social", "company": "Bignon Lebray", "city": "Aix-en-Provence", "period": "À partir du 4 janvier 2027 · 6 mois", "levels": ["M2"], "desc": "Recherches et notes, rédaction d'actes, préparation des audiences, rendez-vous clients. Niveau M2 ou plus (élève-avocat de préférence).", "link": "https://www.village-justice.com/annonces/eleve-avocat-en-droit-commercial-et-droit-social-s1-2027/offres/430957", "source": "Village de la Justice", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0},
-    {"id": "v-adaltys", "type": "Stage", "title": "Deux stagiaires en droit public des affaires", "company": "Adaltys Avocats", "city": "Marseille", "period": "6 mois", "levels": ["M2"], "desc": "Droit public des affaires. Profil M2 ou élève-avocat.", "link": "https://adaltys.com/offres/deux-stagiaires-h-f-en-droit-public-des-affaires/", "source": "Site du cabinet", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0},
-    {"id": "v-jott", "type": "Stage", "title": "Stagiaire juriste droit des affaires / commercial", "company": "JOTT", "city": "Marseille", "period": "2 mois", "levels": ["M1", "M2"], "desc": "Suivi des contrats commerciaux et veille juridique. Stage annoncé non rémunéré. L'annonce est sur la page des offres de l'IEJ.", "link": "https://iej-facdedroit.univ-amu.fr/fr/offres-de-stage", "source": "IEJ Aix-Marseille", "found": "2026-11-19", "checked": "2026-11-20", "misses": 0}
+    {
+      "id": "v-galileo",
+      "type": "Alternance",
+      "title": "Alternance – Juriste en droit des affaires",
+      "company": "Galileo Global Education",
+      "city": "Aix-en-Provence",
+      "period": "Apprentissage",
+      "levels": [
+        "M1",
+        "M2"
+      ],
+      "desc": "Juriste d'entreprise en droit des affaires. Vérifiez le niveau d'études demandé avant de postuler.",
+      "link": "https://www.jobijoba.com/fr/annonce/54/914a3bf1c9f7a1448ed2a7efeb7461cb",
+      "source": "Jobijoba",
+      "found": "2026-11-19",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-pernod-ricard",
+      "type": "Stage",
+      "title": "Stage droit des affaires",
+      "company": "Pernod Ricard",
+      "city": "Marseille",
+      "period": "Janvier 2027 · 6 mois",
+      "levels": [
+        "M1",
+        "M2"
+      ],
+      "desc": "Analyse et rédaction de contrats ; concurrence, distribution et consommation ; RGPD et numérique ; veille. Gratification annoncée : 1 410 à 1 550 € brut/mois.",
+      "link": "https://fr.linkedin.com/jobs/view/stage-droit-des-affaires-janvier-2027-at-pernod-ricard-4489480793",
+      "source": "LinkedIn",
+      "found": "2026-11-19",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-cic-lyonnaise",
+      "type": "Stage",
+      "title": "Stagiaire juridique – contrats entreprises",
+      "company": "CIC Lyonnaise de Banque",
+      "city": "Marseille",
+      "period": "Avril 2027 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Droit bancaire, contrats et sociétés : contrats de crédit, garanties et sûretés, suivi des opérations. Profil M2 droit bancaire ou droit des affaires. 900 à 1 000 €/mois.",
+      "link": "https://fr.linkedin.com/jobs/view/stagiaire-juridique-services-contrats-entreprises-f-h-at-cic-lyonnaise-de-banque-4491451113",
+      "source": "LinkedIn",
+      "found": "2026-11-19",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-squair",
+      "type": "Stage",
+      "title": "Stage droit des sociétés, M&A et Private Equity",
+      "company": "Squair",
+      "city": "Aix-en-Provence",
+      "period": "Janvier 2027 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Recherches juridiques, rédaction d'actes et de notes, suivi des dossiers clients. Profil M2 droit des affaires ou DJCE. Stage rémunéré.",
+      "link": "https://www.qworo.fr/emploi/squair-stage-eleve-avocat-e-droit-des-societes-m-et-a-private-equity-stage-c35002da-a3de-4208-8a0f-7c815b5257cf",
+      "source": "Qworo",
+      "found": "2026-11-19",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-bignon-lebray",
+      "type": "Stage",
+      "title": "Stage en droit commercial et droit social",
+      "company": "Bignon Lebray",
+      "city": "Aix-en-Provence",
+      "period": "À partir du 4 janvier 2027 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Recherches et notes, rédaction d'actes, préparation des audiences, rendez-vous clients. Niveau M2 ou plus (élève-avocat de préférence).",
+      "link": "https://www.village-justice.com/annonces/eleve-avocat-en-droit-commercial-et-droit-social-s1-2027/offres/430957",
+      "source": "Village de la Justice",
+      "found": "2026-11-19",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-adaltys",
+      "type": "Stage",
+      "title": "Deux stagiaires en droit public des affaires",
+      "company": "Adaltys Avocats",
+      "city": "Marseille",
+      "period": "6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Droit public des affaires. Profil M2 ou élève-avocat.",
+      "link": "https://adaltys.com/offres/deux-stagiaires-h-f-en-droit-public-des-affaires/",
+      "source": "Site du cabinet",
+      "found": "2026-11-19",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-jott",
+      "type": "Stage",
+      "title": "Stagiaire juriste droit des affaires / commercial",
+      "company": "JOTT",
+      "city": "Marseille",
+      "period": "2 mois",
+      "levels": [
+        "M1",
+        "M2"
+      ],
+      "desc": "Suivi des contrats commerciaux et veille juridique. Stage annoncé non rémunéré. L'annonce est sur la page des offres de l'IEJ.",
+      "link": "https://iej-facdedroit.univ-amu.fr/fr/offres-de-stage",
+      "source": "IEJ Aix-Marseille",
+      "found": "2026-11-19",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-airbus-helicopters",
+      "type": "Stage",
+      "title": "Stage droit des affaires et compliance",
+      "company": "Airbus Helicopters",
+      "city": "Marignane (Marseille)",
+      "period": "Janvier 2027 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Département Legal & Compliance : rédaction de contrats et de clauses, recherches en droit des affaires, KYC et évaluation des tiers, suivi des précontentieux. Profil DJCE / Master 2 ou CAPA en droit des affaires.",
+      "link": "https://legalalphabet.com/job/stage-2027-droit-des-affaires-compliance-job-at-airbus-in-marseille-area",
+      "source": "LegalAlphabet (offre Airbus)",
+      "found": "2026-11-23",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-ruff-associes",
+      "type": "Stage",
+      "title": "Stagiaire juriste fiscaliste",
+      "company": "Ruff & Associés",
+      "city": "Nice",
+      "period": "Non précisée",
+      "levels": [
+        "M1",
+        "M2"
+      ],
+      "desc": "Équipe fiscale : déclarations IR, IFI et taxe de 3 % pour une clientèle de particuliers résidents et non-résidents, recherches fiscales et veille. Formation en droit fiscal, idéalement niveau Master.",
+      "link": "https://bloom-alternance.fr/plateforme-alternance/offers/73009",
+      "source": "Bloom Alternance",
+      "found": "2026-11-23",
+      "checked": "2026-11-23",
+      "misses": 0
+    },
+    {
+      "id": "v-hermes-international",
+      "type": "Stage",
+      "title": "Stage juriste en droit des affaires",
+      "company": "Hermès International",
+      "city": "Paris",
+      "period": "Premier semestre 2027",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Rédaction et négociation de contrats commerciaux et IP, conseil aux équipes opérationnelles, veille juridique. Profil Master 2 droit des affaires ou IP/IT.",
+      "link": "https://www.welcometothejungle.com/fr/companies/hermes/jobs/stage-juriste-en-droit-des-affaires-hermes-international-h-f_paris_HERMS_gb9V0QY",
+      "source": "Welcome to the Jungle",
+      "found": "2026-11-23",
+      "checked": "2026-11-23",
+      "misses": 0
+    }
   ],
   "links": [
-    {"title": "Alternances juriste droit des affaires – Aix", "desc": "Recherche LinkedIn prête à l'emploi", "link": "https://www.linkedin.com/jobs/search/?keywords=alternance%20juriste%20droit%20des%20affaires&location=Aix-en-Provence%2C%20France"},
-    {"title": "Offres de stage de l'IEJ d'Aix-Marseille", "desc": "Offres centralisées par la faculté", "link": "https://iej-facdedroit.univ-amu.fr/fr/offres-de-stage"},
-    {"title": "Annonces juridiques en région PACA", "desc": "Village de la Justice", "link": "https://www.village-justice.com/annonces/avocats-juristes-autres/emploi/paca-corse.html"},
-    {"title": "La bonne alternance – métiers du droit", "desc": "Site public des offres d'apprentissage", "link": "https://labonnealternance.apprentissage.beta.gouv.fr/"}
+    {
+      "title": "Alternances juriste droit des affaires – Aix",
+      "desc": "Recherche LinkedIn prête à l'emploi",
+      "link": "https://www.linkedin.com/jobs/search/?keywords=alternance%20juriste%20droit%20des%20affaires&location=Aix-en-Provence%2C%20France"
+    },
+    {
+      "title": "Offres de stage de l'IEJ d'Aix-Marseille",
+      "desc": "Offres centralisées par la faculté",
+      "link": "https://iej-facdedroit.univ-amu.fr/fr/offres-de-stage"
+    },
+    {
+      "title": "Annonces juridiques en région PACA",
+      "desc": "Village de la Justice",
+      "link": "https://www.village-justice.com/annonces/avocats-juristes-autres/emploi/paca-corse.html"
+    },
+    {
+      "title": "La bonne alternance – métiers du droit",
+      "desc": "Site public des offres d'apprentissage",
+      "link": "https://labonnealternance.apprentissage.beta.gouv.fr/"
+    }
   ]
 }
