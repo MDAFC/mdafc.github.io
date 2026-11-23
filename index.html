@@ -936,9 +936,9 @@ function downloadICS(e){
   const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MDAFC//FR','BEGIN:VEVENT','UID:'+e.id+'@mdafc','DTSTAMP:'+stamp,start,end,'SUMMARY:'+e.title,'LOCATION:'+e.place,'DESCRIPTION:'+(e.desc||''),'END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download=e.title.replace(/[^\wÀ-ÿ -]/g,'')+'.ics';a.click();
 }
-function editEvent(e){
-  const b=e?.booking;
-  openSheet(`<h3>${e?'Modifier l\'événement':'Nouvel événement'}</h3><form id="f">
+function editEvent(e,opt={}){
+  const b=e?.booking,bk=!!b||(!e&&!!opt.booking);
+  openSheet(`<h3>${e?'Modifier l\'événement':opt.booking?'Nouvelle billetterie':'Nouvel événement'}</h3><form id="f">
     <label class="field">Titre<input name="title" required value="${esc(e?.title)}" placeholder="Réunion CRFPA"></label>
     <div class="grid2"><label class="field">Date de début<input type="date" name="date" required value="${esc(e?.date)}"></label><label class="field">Date de fin (si plusieurs jours)<input type="date" name="end" value="${esc(e?.end)}"></label></div>
     <div class="grid2"><label class="field">Heure (facultatif)<input type="time" name="time" value="${esc(e?.time)}"></label><label class="field">Lieu<input name="place" required value="${esc(e?.place)}"></label></div>
@@ -946,20 +946,21 @@ function editEvent(e){
     <div class="field">Promotions concernées<div class="checks">${PROMOS.map(p=>`<label><input type="checkbox" name="promos" value="${p}" ${!e||e.promos.includes(p)?'checked':''}>${p}</label>`).join('')}</div></div>
     <label class="field">Description<textarea name="desc" rows="2">${esc(e?.desc)}</textarea></label>
     <div class="checks"><label><input type="checkbox" name="hasBoard" ${e?.board?'checked':''}> Ouvrir une boîte à questions</label></div>
-    <div class="checks"><label><input type="checkbox" name="hasBooking" ${b?'checked':''}> Ouvrir la réservation de places</label></div>
-    <div class="grid2"><label class="field">Nombre de places<input type="number" name="places" min="1" value="${b?.places||50}"></label><label class="field">Prix (€, 0 = gratuit)<input type="number" name="price" min="0" step="0.5" value="${b?.price??0}"></label></div>
-    <label class="field">Lien de paiement HelloAsso<input type="url" name="link" value="${esc(b?.link)}" placeholder="https://www.helloasso.com/associations/…"></label>
-    <button class="btn block">${e?'Enregistrer':'Ajouter au calendrier'}</button></form>`);
+    <div class="checks"><label style="font-weight:700"><input type="checkbox" name="hasBooking" id="hasBk" ${bk?'checked':''}> 🎟️ Ouvrir une billetterie (apparaît dans l'onglet Billetterie)</label></div>
+    <div id="bkFields" ${bk?'':'hidden'}><div class="grid2"><label class="field">Nombre de places<input type="number" name="places" min="1" value="${b?.places||50}"></label><label class="field">Prix (€, 0 = gratuit)<input type="number" name="price" min="0" step="0.5" value="${b?.price??0}"></label></div>
+    <label class="field">Lien de paiement HelloAsso<input type="url" name="link" value="${esc(b?.link)}" placeholder="https://www.helloasso.com/associations/…"></label></div>
+    <button class="btn block">${e?'Enregistrer':bk?'Ajouter à l\'agenda et à la billetterie':'Ajouter au calendrier'}</button></form>`);
+  $('#hasBk').onchange=ev=>{$('#bkFields').hidden=!ev.target.checked;if(!e)$('#f .btn').textContent=ev.target.checked?'Ajouter à l\'agenda et à la billetterie':'Ajouter au calendrier';};
   $('#f').onsubmit=ev=>{ev.preventDefault();const f=new FormData(ev.target);
     const promos=f.getAll('promos'); if(!promos.length){toast('Choisissez au moins une promo');return;}
     const end=f.get('end'); if(end&&end<f.get('date')){toast('La date de fin est avant le début');return;}
     const data={title:f.get('title').trim(),date:f.get('date'),end:end&&end!==f.get('date')?end:'',time:f.get('time'),place:f.get('place').trim(),cat:f.get('cat'),promos,desc:f.get('desc').trim()};
-    data.booking=f.get('hasBooking')?{places:+f.get('places'),price:+f.get('price'),link:f.get('link').trim(),going:b?.going||[]}:undefined;
+    data.booking=f.get('hasBooking')?{places:+f.get('places')||50,price:+f.get('price')||0,link:(f.get('link')||'').trim(),going:b?.going||[]}:undefined;
     const target=e||{id:uid('e')};
     if(f.get('hasBoard')&&!target.board){const bid=uid('q');S.boards.push({id:bid,title:data.title+' – vos questions',event:target.id,desc:'Posez vos questions à l\'avance.',questions:[],author:myId(),t:Date.now()});data.board=bid;}
     if(!f.get('hasBoard'))data.board=undefined;
     if(e)Object.assign(e,data); else S.events.push({...target,...data});
-    save();closeSheet();render();toast(e?'Événement modifié':'Ajouté au calendrier commun');};
+    save();closeSheet();render();toast(e?'Événement modifié':data.booking?'Ajouté à l\'agenda et à la billetterie':'Ajouté au calendrier commun');};
 }
 
 /* ================= Billetterie ================= */
@@ -986,7 +987,7 @@ function vBilletterie(){
   $$('[data-list]').forEach(b=>b.onclick=()=>{const e=S.events.find(x=>x.id===b.dataset.list);
     openSheet(`<h3>Inscrits – ${esc(e.title)}</h3><div class="list">${e.booking.going.map(id=>`<div class="card row">${avatar(person(id),'sm')}<div class="meta"><b>${esc(person(id).name)}</b></div></div>`).join('')||'<div class="empty">Aucun inscrit pour l\'instant.</div>'}</div>`);});
   if(ui.focus){const el=$('#t-'+ui.focus);if(el){el.scrollIntoView({block:'center'});el.style.boxShadow='0 0 0 3px var(--gold)';}ui.focus=null;}
-  if(isBDE())setFab('Billetterie',()=>editEvent());
+  if(isBDE())setFab('Billetterie',()=>editEvent(null,{booking:true}));
 }
 
 /* ================= Boutique ================= */
