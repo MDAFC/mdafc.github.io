@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-23T09:58:22+01:00",
+  "updated": "2026-11-26T10:31:51+01:00",
   "offers": [
     {
       "id": "v-galileo",
@@ -16,7 +16,7 @@
       "link": "https://www.jobijoba.com/fr/annonce/54/914a3bf1c9f7a1448ed2a7efeb7461cb",
       "source": "Jobijoba",
       "found": "2026-11-19",
-      "checked": "2026-11-23",
+      "checked": "2026-11-26",
       "misses": 0
     },
     {
@@ -34,7 +34,7 @@
       "link": "https://fr.linkedin.com/jobs/view/stage-droit-des-affaires-janvier-2027-at-pernod-ricard-4489480793",
       "source": "LinkedIn",
       "found": "2026-11-19",
-      "checked": "2026-11-23",
+      "checked": "2026-11-26",
       "misses": 0
     },
     {
@@ -52,7 +52,7 @@
       "source": "LinkedIn",
       "found": "2026-11-19",
       "checked": "2026-11-23",
-      "misses": 0
+      "misses": 1
     },
     {
       "id": "v-squair",
@@ -68,7 +68,7 @@
       "link": "https://www.qworo.fr/emploi/squair-stage-eleve-avocat-e-droit-des-societes-m-et-a-private-equity-stage-c35002da-a3de-4208-8a0f-7c815b5257cf",
       "source": "Qworo",
       "found": "2026-11-19",
-      "checked": "2026-11-23",
+      "checked": "2026-11-26",
       "misses": 0
     },
     {
@@ -85,7 +85,7 @@
       "link": "https://www.village-justice.com/annonces/eleve-avocat-en-droit-commercial-et-droit-social-s1-2027/offres/430957",
       "source": "Village de la Justice",
       "found": "2026-11-19",
-      "checked": "2026-11-23",
+      "checked": "2026-11-26",
       "misses": 0
     },
     {
@@ -102,25 +102,7 @@
       "link": "https://adaltys.com/offres/deux-stagiaires-h-f-en-droit-public-des-affaires/",
       "source": "Site du cabinet",
       "found": "2026-11-19",
-      "checked": "2026-11-23",
-      "misses": 0
-    },
-    {
-      "id": "v-jott",
-      "type": "Stage",
-      "title": "Stagiaire juriste droit des affaires / commercial",
-      "company": "JOTT",
-      "city": "Marseille",
-      "period": "2 mois",
-      "levels": [
-        "M1",
-        "M2"
-      ],
-      "desc": "Suivi des contrats commerciaux et veille juridique. Stage annoncé non rémunéré. L'annonce est sur la page des offres de l'IEJ.",
-      "link": "https://iej-facdedroit.univ-amu.fr/fr/offres-de-stage",
-      "source": "IEJ Aix-Marseille",
-      "found": "2026-11-19",
-      "checked": "2026-11-23",
+      "checked": "2026-11-26",
       "misses": 0
     },
     {
@@ -137,7 +119,7 @@
       "link": "https://legalalphabet.com/job/stage-2027-droit-des-affaires-compliance-job-at-airbus-in-marseille-area",
       "source": "LegalAlphabet (offre Airbus)",
       "found": "2026-11-23",
-      "checked": "2026-11-23",
+      "checked": "2026-11-26",
       "misses": 0
     },
     {
@@ -155,7 +137,7 @@
       "link": "https://bloom-alternance.fr/plateforme-alternance/offers/73009",
       "source": "Bloom Alternance",
       "found": "2026-11-23",
-      "checked": "2026-11-23",
+      "checked": "2026-11-26",
       "misses": 0
     },
     {
@@ -173,6 +155,160 @@
       "source": "Welcome to the Jungle",
       "found": "2026-11-23",
       "checked": "2026-11-23",
+      "misses": 1
+    },
+    {
+      "id": "v-caisse-epargne-cote-d-azur",
+      "type": "Stage",
+      "title": "Assistant juridique bancaire",
+      "company": "Caisse d'Épargne Côte d'Azur (Groupe BPCE)",
+      "city": "Nice",
+      "period": "1er trimestre 2027 · 6 mois",
+      "levels": [
+        "M1",
+        "M2"
+      ],
+      "desc": "Suivi et contrôle des prises de garanties sur les crédits spécifiques et complexes (syndication, pool), relances auprès des acteurs bancaires et juridiques. Profil Bac+4/5 en droit, idéalement avec une expérience en juridique bancaire.",
+      "link": "https://www.wizbii.com/company/groupe-bpce/job/stage-assistant-juridique-bancaire-h-f-1",
+      "source": "Wizbii",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-cabinet-nice-droit-des-affaires",
+      "type": "Stage",
+      "title": "Stage droit des affaires (sociétés, M&A, contrats)",
+      "company": "Cabinet d'avocats (non nommé)",
+      "city": "Nice",
+      "period": "2 à 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Rédaction de contrats commerciaux, recherches en droit des sociétés, préparation d'opérations de fusions-acquisitions et veille. Étudiant(e) en M2 droit des affaires, anglais professionnel ; gratification sur profil.",
+      "link": "https://www.village-justice.com/annonces/stage-droit-des-affaires/offres/431265",
+      "source": "Village de la Justice",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-baker-mckenzie-banque-finance",
+      "type": "Stage",
+      "title": "Stage Banque-Finance",
+      "company": "Baker McKenzie",
+      "city": "Paris",
+      "period": "Juillet 2027 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Recherches juridiques, notes et projets de consultations pour le département Banque-Finance. Formation pré-CAPA complétée par un M2 en droit bancaire et financier ou DIP, anglais juridique courant.",
+      "link": "https://www.village-justice.com/annonces/stage-avocat-banque-finance-juillet-decembre-2027-h-f/offres/431318",
+      "source": "Village de la Justice",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-baker-mckenzie-fiscalite-ebwm",
+      "type": "Stage",
+      "title": "Stage Fiscalité – Employee Benefits & Wealth Management",
+      "company": "Baker McKenzie",
+      "city": "Paris",
+      "period": "Juillet 2027 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Fiscalité personnelle, actionnariat salarié, rémunération et mobilité internationale au sein du département fiscal. Spécialisation en droit fiscal, anglais courant ; une offre de 3 mois à partir d'avril 2027 existe aussi.",
+      "link": "https://www.village-justice.com/annonces/stage-fiscalite-employee-benefits-wealth-management-actionnariat-salarie-remuneration-fiscalite-personnelle-juillet-decembre-2027-%C3%A2-/offres/431024",
+      "source": "Village de la Justice",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-franprix",
+      "type": "Stage",
+      "title": "Stage Juriste droit des affaires",
+      "company": "Franprix",
+      "city": "La Défense (Courbevoie)",
+      "period": "Juillet 2027 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Direction juridique : suivi du parc de franchisés, cessions de fonds et baux, analyse de contrats commerciaux, conformité et précontentieux. Master II droit des affaires ; gratification de 1 200 à 1 300 €.",
+      "link": "https://www.village-justice.com/annonces/stage-juriste-droit-des-affaires-h-f/offres/431311",
+      "source": "Village de la Justice",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-lpa-law-fusions-acquisitions",
+      "type": "Stage",
+      "title": "Stage Fusions-Acquisitions / Corporate",
+      "company": "LPA Law",
+      "city": "Paris",
+      "period": "Janvier ou juillet 2028 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Recherches, notes, consultations et documentation sociale et contractuelle sur des opérations de M&A et restructurations de groupes. Étudiant en cours de Master II (ou CRFPA / école d'avocats), anglais courant.",
+      "link": "https://www.village-justice.com/annonces/stagiaire-departement-fusions-acquisitions-corporate-h-f-premier-et-second-semestre-2028/offres/431274",
+      "source": "Village de la Justice",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-lpa-law-fiscalite-patrimoniale",
+      "type": "Stage",
+      "title": "Stage Fiscalité patrimoniale",
+      "company": "LPA Law",
+      "city": "Paris",
+      "period": "Janvier ou juillet 2028 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Recherches, notes et projets de consultations en fiscalité patrimoniale (structuration et transmission du patrimoine). Étudiant de Master II (ou CRFPA / école d'avocats), anglais courant.",
+      "link": "https://www.village-justice.com/annonces/stagiaire-fiscalite-patrimoniale-premier-et-second-semestres-2028-h-f/offres/431271",
+      "source": "Village de la Justice",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-cms-francis-lefebvre-fiscalite-locale",
+      "type": "Stage",
+      "title": "Stage Fiscalité locale",
+      "company": "CMS Francis Lefebvre",
+      "city": "Neuilly-sur-Seine (Paris)",
+      "period": "Juillet 2027 ou janvier 2028 · 6 mois",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Stage au sein de l'équipe fiscalité locale du cabinet. Ouvert aux élèves-avocats ou étudiants en cours de M2 en droit fiscal.",
+      "link": "https://cms.law/fr/fra/nos-offres/stage-fiscalite-locale-juillet-2027-ou-janvier-2028",
+      "source": "site du cabinet",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
+      "misses": 0
+    },
+    {
+      "id": "v-cabinet-paris-15-droit-des-affaires",
+      "type": "Stage",
+      "title": "Stage en cabinet d'avocats – droit des affaires",
+      "company": "Cabinet d'avocats (non nommé)",
+      "city": "Paris",
+      "period": "Non précisée",
+      "levels": [
+        "M2"
+      ],
+      "desc": "Stage en droit des affaires dans un cabinet du 15e arrondissement ; niveau minimum M2. Annonce succincte, candidature via le Village de la Justice.",
+      "link": "https://www.village-justice.com/annonces/recherche-stagiaire-h-f/offres/431332",
+      "source": "Village de la Justice",
+      "found": "2026-11-26",
+      "checked": "2026-11-26",
       "misses": 0
     }
   ],
